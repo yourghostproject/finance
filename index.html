@@ -1,528 +1,179 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Finance Mastersheet — YGP</title>
+  <title>YGP Finance — Simple</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/customParseFormat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { color-scheme: light dark; }
-    html,body{font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji';}
-    .card{ @apply bg-white/70 dark:bg-slate-900/60 backdrop-blur border border-slate-200/60 dark:border-slate-700/60 rounded-2xl shadow-sm; }
-    .kpi{ @apply text-slate-900 dark:text-slate-100; }
-    .tag{ @apply text-xs px-2 py-0.5 rounded-full border border-slate-300/60 dark:border-slate-600/60; }
+    html,body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .card{ @apply bg-white/80 dark:bg-slate-900/70 backdrop-blur rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm; }
     .input{ @apply w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm; }
-    .btn{ @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium shadow-sm border border-slate-300 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700; }
-    .btn-primary{ @apply bg-slate-900 text-white border-slate-900 hover:bg-black dark:bg-indigo-600 dark:hover:bg-indigo-500 dark:border-indigo-600; }
+    .btn{ @apply inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700; }
+    .btn-primary{ @apply bg-slate-900 text-white border-slate-900 hover:bg-black; }
+    .pill-ok{ @apply text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full text-xs; }
+    .pill-alert{ @apply text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full text-xs; }
     .table{ @apply w-full text-sm; }
-    .table th{ @apply text-left font-semibold text-slate-600 dark:text-slate-300; }
-    .table td, .table th{ @apply px-3 py-2; }
-    .pill-ok{ @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300; }
-    .pill-alert{ @apply bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300; }
+    .table th{ @apply text-left font-semibold text-slate-500; }
+    .table td,.table th{ @apply px-3 py-2; }
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 text-slate-800 dark:text-slate-100">
-  <div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+  <div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
+
     <header class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold">Finance Mastersheet <span class="text-slate-500">— YGP</span></h1>
-        <p class="text-sm text-slate-500">Single‑file app. All data stays in your browser (localStorage). Host on GitHub Pages.</p>
-      </div>
+      <h1 class="text-xl font-bold">YGP Finance — version simple</h1>
       <div class="flex gap-2">
-        <button id="btnExportJSON" class="btn">Export JSON</button>
-        <label class="btn cursor-pointer">Import JSON<input id="importJSON" type="file" accept="application/json" class="hidden"></label>
-        <button id="btnReset" class="btn">Reset</button>
+        <button id="btnSeed" class="btn">Ajouter revenus d'octobre</button>
+        <button id="btnReset" class="btn">Réinitialiser</button>
       </div>
     </header>
 
-    <!-- KPIs Row -->
-    <section class="grid md:grid-cols-4 gap-4">
-      <div class="card p-5">
-        <div class="text-xs text-slate-500">Closing Balance (Current Month)</div>
-        <div id="kpiClosing" class="kpi text-2xl font-semibold">£—</div>
-        <div id="kpiSafety" class="mt-2 inline-flex items-center gap-2 tag">—</div>
-      </div>
-      <div class="card p-5">
-        <div class="text-xs text-slate-500">Runway to £20k (months)</div>
-        <div id="kpiRunway" class="kpi text-2xl font-semibold">—</div>
-        <div class="text-xs text-slate-500 mt-2">Assuming £2,500/mo net outflow.</div>
-      </div>
-      <div class="card p-5">
-        <div class="text-xs text-slate-500">Tax Pot vs Est. Tax</div>
-        <div class="kpi text-2xl font-semibold"><span id="kpiTaxPot">£—</span> <span class="text-sm text-slate-400">reserved</span></div>
-        <div class="text-xs text-slate-500 mt-1">Est. tax on music: <span id="kpiEstTax">£—</span> • <span id="kpiPotDelta">£—</span> surplus/shortfall</div>
-      </div>
-      <div class="card p-5">
-        <div class="text-xs text-slate-500">This Tax Year — Music Gross</div>
-        <div id="kpiMusicGross" class="kpi text-2xl font-semibold">£—</div>
-        <div class="text-xs text-slate-500 mt-1">Allowance left: <span id="kpiAllowanceLeft">£—</span></div>
+    <!-- 1) Réglages essentiels -->
+    <section class="card p-4">
+      <h2 class="text-base font-semibold mb-3">Réglages</h2>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <label class="text-sm">Start (AAAA-MM)
+          <input id="startMonth" class="input" value="2025-10" />
+        </label>
+        <label class="text-sm">Mois à prévoir
+          <input id="months" type="number" class="input" value="6" />
+        </label>
+        <label class="text-sm">Épargne de départ (£)
+          <input id="starting" type="number" class="input" value="25749" />
+        </label>
+        <label class="text-sm">Coût de vie mensuel (£)
+          <input id="living" type="number" class="input" value="2500" />
+        </label>
+        <label class="text-sm">Plancher sécurité (£)
+          <input id="floor" type="number" class="input" value="20000" />
+        </label>
+        <label class="text-sm">Tax pot musique (ex: 0.25)
+          <input id="taxRate" type="number" step="0.01" class="input" value="0.25" />
+        </label>
       </div>
     </section>
 
-    <!-- Settings -->
-    <section class="card p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">Settings</h2>
-        <button id="btnRecalc" class="btn btn-primary">Recalculate</button>
-      </div>
-      <div class="grid md:grid-cols-3 gap-4">
-        <label class="space-y-1">
-          <span class="text-xs text-slate-500">Start Month (YYYY-MM)</span>
-          <input id="startMonth" class="input" placeholder="2025-10" />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs text-slate-500">Months to Forecast</span>
-          <input id="monthsToForecast" type="number" class="input" value="6" />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs text-slate-500">Starting Savings (at start)</span>
-          <input id="startingSavings" type="number" class="input" />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs text-slate-500">Monthly Living Cost</span>
-          <input id="livingCost" type="number" class="input" />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs text-slate-500">Safety Floor (Min Savings)</span>
-          <input id="safetyFloor" type="number" class="input" />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs text-slate-500">Tax Pot Reserve Rate (Music)</span>
-          <input id="taxRate" type="number" step="0.01" class="input" />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs text-slate-500">Personal Allowance (Tax Year)</span>
-          <input id="personalAllowance" type="number" class="input" />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs text-slate-500">PAYE Income YTD (Tax Year)</span>
-          <input id="payeYtd" type="number" class="input" />
-        </label>
-        <div class="space-y-1">
-          <span class="text-xs text-slate-500">Tax Year Range</span>
-          <div class="grid grid-cols-2 gap-2">
-            <input id="taxStart" class="input" placeholder="2025-04-06" />
-            <input id="taxEnd" class="input" placeholder="2026-04-05" />
-          </div>
-        </div>
-      </div>
-      <p class="text-xs text-slate-500">Tip: these defaults are prefilled for your case. Adjust anytime.</p>
-    </section>
-
-    <!-- Income Tracker -->
-    <section class="card p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">Income Tracker</h2>
-        <div class="flex gap-2">
-          <button id="btnAddRow" class="btn">Add Row</button>
-          <button id="btnAddSeed" class="btn">Add October Seeds</button>
-        </div>
+    <!-- 2) Saisie ultra simple des revenus -->
+    <section class="card p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-base font-semibold">Entrées (revenus)</h2>
+        <button id="btnAddRow" class="btn btn-primary">Ajouter une ligne</button>
       </div>
       <div class="overflow-x-auto">
         <table class="table" id="incomeTable">
           <thead>
-          <tr>
-            <th>Date (YYYY-MM-DD)</th>
-            <th>MonthKey (YYYY-MM)</th>
-            <th>Type</th>
-            <th>Source</th>
-            <th>Description</th>
-            <th>Gross</th>
-            <th>Tax Reserved</th>
-            <th>Net Available</th>
-            <th></th>
-          </tr>
+            <tr>
+              <th>Date</th>
+              <th>Mois</th>
+              <th>Type</th>
+              <th>Source</th>
+              <th>Montant (£)</th>
+              <th>Tax pot</th>
+              <th>Net</th>
+              <th></th>
+            </tr>
           </thead>
           <tbody id="incomeBody"></tbody>
         </table>
       </div>
-      <p class="text-xs text-slate-500">Use <strong>Type = Music</strong> for YGP/MADM3N/Royalties to apply the tax-pot reserve.
-        MonthKey drives forecasting (e.g., <code>2025-10</code>).</p>
+      <p class="text-xs text-slate-500 mt-2">Utilise <b>Type = Music</b> pour appliquer la réserve (tax pot).</p>
     </section>
 
-    <!-- Monthly Forecast & Chart -->
-    <section class="grid lg:grid-cols-2 gap-4">
-      <div class="card p-6">
-        <h2 class="text-lg font-semibold mb-3">Monthly Forecast</h2>
-        <div class="overflow-x-auto">
-          <table class="table" id="forecastTable">
-            <thead>
-              <tr>
-                <th>Month</th>
-                <th>Opening</th>
-                <th>Non‑Music Inflows</th>
-                <th>Music Gross</th>
-                <th>Tax Pot (25%)</th>
-                <th>Net Music</th>
-                <th>Total Inflows</th>
-                <th>Living</th>
-                <th>Net Change</th>
-                <th>Closing</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="forecastBody"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card p-6">
-        <h2 class="text-lg font-semibold mb-3">Closing Balance (Chart)</h2>
-        <canvas id="closingChart" height="200"></canvas>
+    <!-- 3) Prévision claire -->
+    <section class="card p-4">
+      <h2 class="text-base font-semibold mb-3">Prévision (mensuelle)</h2>
+      <div class="overflow-x-auto">
+        <table class="table" id="forecastTable">
+          <thead>
+            <tr>
+              <th>Mois</th>
+              <th>Ouverture</th>
+              <th>Entrées (hors musique)</th>
+              <th>Musique (net)</th>
+              <th>Coût de vie</th>
+              <th>Variation</th>
+              <th>Clôture</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody id="forecastBody"></tbody>
+        </table>
       </div>
     </section>
 
-    <footer class="text-xs text-slate-500 text-center py-6">Built for Gauthier • Data stays on your device • v1.0</footer>
   </div>
 
 <script>
-// --- Utilities & Storage ---
-const STORAGE_KEY = 'ygp_finance_mastersheet_v1';
-const dayjsPlugin = dayjs.extend(window.dayjs_plugin_customParseFormat);
+const STORAGE='ygp_finance_simple_v1';
+let state = JSON.parse(localStorage.getItem(STORAGE)||'{}');
+if(!state.settings){ state={settings:{startMonth:'2025-10',months:6,starting:25749,living:2500,floor:20000,taxRate:0.25}, incomes:[]}; }
 
-const defaultState = {
-  settings: {
-    startMonth: '2025-10',
-    monthsToForecast: 6,
-    startingSavings: 25749,
-    livingCost: 2500,
-    safetyFloor: 20000,
-    taxRate: 0.25,
-    personalAllowance: 12570,
-    payeYtd: 3300,
-    taxStart: '2025-04-06',
-    taxEnd: '2026-04-05'
-  },
-  incomes: [
-    // Seeds can be added with button; kept empty by default so user sees effect
-  ]
+const el={
+  startMonth:document.getElementById('startMonth'),
+  months:document.getElementById('months'),
+  starting:document.getElementById('starting'),
+  living:document.getElementById('living'),
+  floor:document.getElementById('floor'),
+  taxRate:document.getElementById('taxRate'),
+  incomeBody:document.getElementById('incomeBody'),
+  forecastBody:document.getElementById('forecastBody'),
+  btnAddRow:document.getElementById('btnAddRow'),
+  btnSeed:document.getElementById('btnSeed'),
+  btnReset:document.getElementById('btnReset')
 };
 
-function loadState(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return JSON.parse(JSON.stringify(defaultState));
-    const parsed = JSON.parse(raw);
-    // Merge with defaults to survive updates
-    return { 
-      settings: { ...defaultState.settings, ...(parsed.settings||{}) },
-      incomes: Array.isArray(parsed.incomes)? parsed.incomes: []
-    };
-  }catch(e){
-    console.warn('Failed to load state', e);
-    return JSON.parse(JSON.stringify(defaultState));
-  }
-}
+function save(){ localStorage.setItem(STORAGE, JSON.stringify(state)); }
+function monthsFrom(start, n){ const [Y,M]=start.split('-').map(Number); const d=new Date(Y,M-1,1); const out=[]; for(let i=0;i<n;i++){ out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`); d.setMonth(d.getMonth()+1); } return out; }
 
-function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
+function renderSettings(){ const s=state.settings; el.startMonth.value=s.startMonth; el.months.value=s.months; el.starting.value=s.starting; el.living.value=s.living; el.floor.value=s.floor; el.taxRate.value=s.taxRate; }
+function readSettings(){ const s=state.settings; s.startMonth=el.startMonth.value.trim(); s.months=parseInt(el.months.value||6,10); s.starting=parseFloat(el.starting.value||0); s.living=parseFloat(el.living.value||0); s.floor=parseFloat(el.floor.value||0); s.taxRate=parseFloat(el.taxRate.value||0.25); save(); render(); }
 
-let state = loadState();
+function addRow(row){ state.incomes.push(row||{date:'',month:'',type:'Other',source:'',gross:0}); save(); renderIncome(); renderForecast(); }
+function delRow(i){ state.incomes.splice(i,1); save(); render(); }
 
-// --- DOM Refs ---
-const refs = {
-  startMonth: document.getElementById('startMonth'),
-  monthsToForecast: document.getElementById('monthsToForecast'),
-  startingSavings: document.getElementById('startingSavings'),
-  livingCost: document.getElementById('livingCost'),
-  safetyFloor: document.getElementById('safetyFloor'),
-  taxRate: document.getElementById('taxRate'),
-  personalAllowance: document.getElementById('personalAllowance'),
-  payeYtd: document.getElementById('payeYtd'),
-  taxStart: document.getElementById('taxStart'),
-  taxEnd: document.getElementById('taxEnd'),
-  incomeBody: document.getElementById('incomeBody'),
-  forecastBody: document.getElementById('forecastBody'),
-  btnAddRow: document.getElementById('btnAddRow'),
-  btnAddSeed: document.getElementById('btnAddSeed'),
-  btnRecalc: document.getElementById('btnRecalc'),
-  btnExportJSON: document.getElementById('btnExportJSON'),
-  importJSON: document.getElementById('importJSON'),
-  btnReset: document.getElementById('btnReset'),
-  kpiClosing: document.getElementById('kpiClosing'),
-  kpiSafety: document.getElementById('kpiSafety'),
-  kpiRunway: document.getElementById('kpiRunway'),
-  kpiTaxPot: document.getElementById('kpiTaxPot'),
-  kpiEstTax: document.getElementById('kpiEstTax'),
-  kpiPotDelta: document.getElementById('kpiPotDelta'),
-  kpiMusicGross: document.getElementById('kpiMusicGross'),
-  kpiAllowanceLeft: document.getElementById('kpiAllowanceLeft'),
-  closingChart: document.getElementById('closingChart')
-};
+function renderIncome(){ el.incomeBody.innerHTML=''; state.incomes.forEach((r,i)=>{ const isMusic=(r.type==='Music'); const tax=isMusic? (r.gross||0)*state.settings.taxRate:0; const net=(r.gross||0)-tax; const tr=document.createElement('tr'); tr.innerHTML=`
+  <td><input class="input" value="${r.date||''}" data-i="${i}" data-k="date" placeholder="AAAA-MM-JJ"></td>
+  <td><input class="input" value="${r.month||''}" data-i="${i}" data-k="month" placeholder="AAAA-MM"></td>
+  <td>
+    <select class="input" data-i="${i}" data-k="type">
+      <option ${r.type==='Music'?'selected':''}>Music</option>
+      <option ${r.type==='Salary'?'selected':''}>Salary</option>
+      <option ${r.type==='Other'?'selected':''}>Other</option>
+    </select>
+  </td>
+  <td><input class="input" value="${r.source||''}" data-i="${i}" data-k="source" placeholder="Source"></td>
+  <td><input class="input" type="number" value="${r.gross||0}" data-i="${i}" data-k="gross"></td>
+  <td>£${tax.toLocaleString()}</td>
+  <td>£${net.toLocaleString()}</td>
+  <td><button class="btn" data-del="${i}">Suppr</button></td>`; el.incomeBody.appendChild(tr); }); }
 
-// --- Bind settings to inputs ---
-function renderSettings(){
-  const s = state.settings;
-  refs.startMonth.value = s.startMonth;
-  refs.monthsToForecast.value = s.monthsToForecast;
-  refs.startingSavings.value = s.startingSavings;
-  refs.livingCost.value = s.livingCost;
-  refs.safetyFloor.value = s.safetyFloor;
-  refs.taxRate.value = s.taxRate;
-  refs.personalAllowance.value = s.personalAllowance;
-  refs.payeYtd.value = s.payeYtd;
-  refs.taxStart.value = s.taxStart;
-  refs.taxEnd.value = s.taxEnd;
-}
+el.incomeBody.addEventListener('input', (e)=>{ const t=e.target; const i=+t.getAttribute('data-i'); const k=t.getAttribute('data-k'); if(Number.isInteger(i) && k){ let v=t.value; if(k==='gross') v=parseFloat(v||0); state.incomes[i][k]=v; save(); render(); }});
+el.incomeBody.addEventListener('click', (e)=>{ const b=e.target.closest('button[data-del]'); if(b){ delRow(+b.getAttribute('data-del')); }});
 
-function readSettings(){
-  const s = state.settings;
-  s.startMonth = refs.startMonth.value.trim() || '2025-10';
-  s.monthsToForecast = parseInt(refs.monthsToForecast.value||6,10);
-  s.startingSavings = parseFloat(refs.startingSavings.value||0);
-  s.livingCost = parseFloat(refs.livingCost.value||0);
-  s.safetyFloor = parseFloat(refs.safetyFloor.value||0);
-  s.taxRate = parseFloat(refs.taxRate.value||0.25);
-  s.personalAllowance = parseFloat(refs.personalAllowance.value||12570);
-  s.payeYtd = parseFloat(refs.payeYtd.value||0);
-  s.taxStart = refs.taxStart.value.trim()||'2025-04-06';
-  s.taxEnd = refs.taxEnd.value.trim()||'2026-04-05';
-}
+function sum(arr, fn){ return arr.reduce((a,b)=>a+(fn(b)||0),0); }
+function renderForecast(){ const s=state.settings; const months=monthsFrom(s.startMonth,s.months); let opening=s.starting; el.forecastBody.innerHTML=''; months.forEach(m=>{ const rows=state.incomes.filter(r=>r.month===m); const nonMusic=sum(rows,r=> r.type!=='Music'? +r.gross:0); const musicNet=sum(rows,r=> r.type==='Music'? (+r.gross - (+r.gross*s.taxRate)):0 ); const inflows=nonMusic+musicNet; const change=inflows - s.living; const closing=opening + change; const ok=closing>=s.floor; const tr=document.createElement('tr'); tr.innerHTML=`
+  <td>${m}</td>
+  <td>£${opening.toLocaleString()}</td>
+  <td>£${nonMusic.toLocaleString()}</td>
+  <td>£${musicNet.toLocaleString()}</td>
+  <td>£${s.living.toLocaleString()}</td>
+  <td class="${change<0?'text-rose-600':''}">£${change.toLocaleString()}</td>
+  <td class="${ok?'':'text-rose-600 font-semibold'}">£${closing.toLocaleString()}</td>
+  <td><span class="${ok?'pill-ok':'pill-alert'}">${ok?'OK':'< £20k'}</span></td>`; el.forecastBody.appendChild(tr); opening=closing; }); }
 
-// --- Income table rendering ---
-function newIncomeRow(){
-  return { date: '', monthKey: '', type: 'Other', source: '', desc: '', gross: 0 };
-}
+function render(){ renderSettings(); renderIncome(); renderForecast(); }
 
-function addIncomeRow(row){
-  state.incomes.push(row||newIncomeRow());
-  saveState();
-  renderIncomeTable();
-}
+// Buttons
+el.btnAddRow.addEventListener('click',()=> addRow());
+el.btnSeed.addEventListener('click',()=>{ addRow({date:'2025-10-01',month:'2025-10',type:'Other',source:'Flat deposit refund',gross:1000}); addRow({date:'2025-10-01',month:'2025-10',type:'Salary',source:'Final PAYE salary',gross:3300}); });
+el.btnReset.addEventListener('click',()=>{ if(confirm('Tout réinitialiser ?')){ state={settings:{startMonth:'2025-10',months:6,starting:25749,living:2500,floor:20000,taxRate:0.25}, incomes:[]}; save(); render(); }});
 
-function removeIncomeRow(idx){
-  state.incomes.splice(idx,1);
-  saveState();
-  renderIncomeTable();
-}
+// Settings change listeners
+['startMonth','months','starting','living','floor','taxRate'].forEach(id=>{ document.getElementById(id).addEventListener('change', readSettings); });
 
-function renderIncomeTable(){
-  const tbody = refs.incomeBody;
-  tbody.innerHTML = '';
-  state.incomes.forEach((r,idx)=>{
-    const isMusic = (r.type||'').toLowerCase()==='music';
-    const taxReserved = isMusic ? (r.gross||0) * state.settings.taxRate : 0;
-    const net = (r.gross||0) - taxReserved;
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input class="input" value="${r.date||''}" placeholder="YYYY-MM-DD" data-field="date" data-idx="${idx}"></td>
-      <td><input class="input" value="${r.monthKey||''}" placeholder="YYYY-MM" data-field="monthKey" data-idx="${idx}"></td>
-      <td>
-        <select class="input" data-field="type" data-idx="${idx}">
-          <option ${r.type==='Music'?'selected':''}>Music</option>
-          <option ${r.type==='Salary'?'selected':''}>Salary</option>
-          <option ${r.type==='Other'?'selected':''}>Other</option>
-        </select>
-      </td>
-      <td><input class="input" value="${r.source||''}" placeholder="Source" data-field="source" data-idx="${idx}"></td>
-      <td><input class="input" value="${r.desc||''}" placeholder="Description" data-field="desc" data-idx="${idx}"></td>
-      <td><input class="input" type="number" value="${r.gross||0}" data-field="gross" data-idx="${idx}"></td>
-      <td class="whitespace-nowrap">£${taxReserved.toLocaleString()}</td>
-      <td class="whitespace-nowrap">£${net.toLocaleString()}</td>
-      <td><button class="btn" data-action="del" data-idx="${idx}">Delete</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-refs.incomeBody.addEventListener('input', (e)=>{
-  const el = e.target;
-  const idx = parseInt(el.getAttribute('data-idx'),10);
-  const field = el.getAttribute('data-field');
-  if(Number.isInteger(idx) && field){
-    let val = el.value;
-    if(field==='gross') val = parseFloat(val||0);
-    state.incomes[idx][field] = val;
-    saveState();
-    renderIncomeTable(); // re-render to refresh computed tax/net
-  }
-});
-
-refs.incomeBody.addEventListener('click', (e)=>{
-  const btn = e.target.closest('button[data-action="del"]');
-  if(btn){ removeIncomeRow(parseInt(btn.getAttribute('data-idx'),10)); }
-});
-
-// Seed entries button (your case)
-refs.btnAddSeed.addEventListener('click', ()=>{
-  addIncomeRow({date:'2025-10-01', monthKey:'2025-10', type:'Other', source:'Flat deposit refund', desc:'Tenancy deposit', gross:1000});
-  addIncomeRow({date:'2025-10-01', monthKey:'2025-10', type:'Salary', source:'Final PAYE salary', desc:'Sept salary usable in Oct', gross:3300});
-});
-
-refs.btnAddRow.addEventListener('click', ()=> addIncomeRow());
-
-// --- Forecast calculation ---
-function monthsFromStart(startYYYYMM, n){
-  const out=[];
-  const [y,m] = startYYYYMM.split('-').map(Number);
-  let d = dayjs(`${y}-${String(m).padStart(2,'0')}-01`);
-  for(let i=0;i<n;i++){
-    out.push(d.format('YYYY-MM'));
-    d = d.add(1,'month');
-  }
-  return out;
-}
-
-function sumByMonth(rows, monthKey, predicate){
-  return rows.filter(r=>r.monthKey===monthKey && (!predicate || predicate(r)))
-             .reduce((a,b)=>a+(+b.gross||0),0);
-}
-
-function computeForecast(){
-  const s = state.settings;
-  const months = monthsFromStart(s.startMonth, s.monthsToForecast);
-  const rows = state.incomes;
-  const data = [];
-  let opening = s.startingSavings;
-
-  months.forEach((mk,i)=>{
-    const nonMusic = sumByMonth(rows, mk, r => (r.type||'')!== 'Music');
-    const musicGross = sumByMonth(rows, mk, r => (r.type||'')=== 'Music');
-    const taxPot = musicGross * s.taxRate;
-    const netMusic = musicGross - taxPot;
-    const totalInflows = nonMusic + netMusic;
-    const living = s.livingCost;
-    const netChange = totalInflows - living;
-    const closing = opening + netChange;
-
-    data.push({
-      month: mk,
-      opening, nonMusic, musicGross, taxPot, netMusic, totalInflows, living, netChange, closing
-    });
-    opening = closing; // next month opening
-  });
-
-  return data;
-}
-
-// --- HMRC calc (simple, allowance aware) ---
-function computeTaxKpis(){
-  const s = state.settings;
-  const rows = state.incomes;
-  const inRange = rows.filter(r=> r.type==='Music' && r.date && r.date>=s.taxStart && r.date<=s.taxEnd);
-  const musicGross = inRange.reduce((a,b)=> a+(+b.gross||0),0);
-  const taxPot = musicGross * s.taxRate;
-  const allowanceLeft = Math.max(0, s.personalAllowance - (musicGross + s.payeYtd));
-  // Taxable music (basic estimate): portion of music over remaining allowance (ignoring rates beyond 20%)
-  const taxableMusic = Math.max(0, musicGross - Math.max(0, s.personalAllowance - s.payeYtd));
-  const estTax = taxableMusic * 0.20; // basic rate for planning
-  return { musicGross, taxPot, allowanceLeft, estTax, potDelta: taxPot - estTax };
-}
-
-// --- Render forecast table + KPIs + chart ---
-let chart;
-function renderAll(){
-  renderSettings();
-  renderIncomeTable();
-  const forecast = computeForecast();
-
-  // Forecast table
-  refs.forecastBody.innerHTML = '';
-  forecast.forEach(row=>{
-    const tr = document.createElement('tr');
-    const statusOk = row.closing >= state.settings.safetyFloor;
-    tr.innerHTML = `
-      <td class="whitespace-nowrap">${row.month}</td>
-      <td>£${row.opening.toLocaleString()}</td>
-      <td>£${row.nonMusic.toLocaleString()}</td>
-      <td>£${row.musicGross.toLocaleString()}</td>
-      <td>£${row.taxPot.toLocaleString()}</td>
-      <td>£${row.netMusic.toLocaleString()}</td>
-      <td>£${row.totalInflows.toLocaleString()}</td>
-      <td>£${row.living.toLocaleString()}</td>
-      <td class="${row.netChange<0?'text-rose-600':''}">£${row.netChange.toLocaleString()}</td>
-      <td class="${statusOk?'':'text-rose-600 font-semibold'}">£${row.closing.toLocaleString()}</td>
-      <td><span class="tag ${statusOk?'pill-ok':'pill-alert'}">${statusOk?'OK':'ALERT < £20k'}</span></td>
-    `;
-    refs.forecastBody.appendChild(tr);
-  });
-
-  // KPIs
-  if(forecast.length){
-    const last = forecast[0];
-    const current = forecast[0]; // current month = first row from start month
-    const closingNow = current.closing;
-    const monthlyBurn = Math.max(0, state.settings.livingCost - (current.totalInflows));
-    const runway = monthlyBurn>0 ? Math.max(0, Math.floor((closingNow - state.settings.safetyFloor)/monthlyBurn)) : '∞';
-    refs.kpiClosing.textContent = `£${closingNow.toLocaleString()}`;
-    refs.kpiSafety.textContent = closingNow >= state.settings.safetyFloor ? 'OK' : 'ALERT < £20k';
-    refs.kpiSafety.className = `mt-2 inline-flex items-center gap-2 tag ${closingNow>=state.settings.safetyFloor?'pill-ok':'pill-alert'}`;
-    refs.kpiRunway.textContent = runway;
-  }
-
-  // Tax KPIs
-  const tax = computeTaxKpis();
-  refs.kpiTaxPot.textContent = `£${Math.round(tax.taxPot).toLocaleString()}`;
-  refs.kpiEstTax.textContent = `£${Math.round(tax.estTax).toLocaleString()}`;
-  const delta = Math.round(tax.potDelta);
-  refs.kpiPotDelta.textContent = `${delta>=0?'+':''}£${delta.toLocaleString()}`;
-  refs.kpiMusicGross.textContent = `£${Math.round(tax.musicGross).toLocaleString()}`;
-  refs.kpiAllowanceLeft.textContent = `£${Math.round(tax.allowanceLeft).toLocaleString()}`;
-
-  // Chart
-  const labels = forecast.map(r=>r.month);
-  const closing = forecast.map(r=>r.closing);
-  if(chart) chart.destroy();
-  chart = new Chart(refs.closingChart, {
-    type: 'line',
-    data: { labels, datasets: [{ label: 'Closing Balance', data: closing }]},
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: false }
-      }
-    }
-  });
-}
-
-// --- Buttons ---
-refs.btnRecalc.addEventListener('click', ()=>{ readSettings(); saveState(); renderAll(); });
-refs.btnExportJSON.addEventListener('click', ()=>{
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'ygp_finance_state.json';
-  a.click();
-});
-
-refs.importJSON.addEventListener('change', (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      const imported = JSON.parse(reader.result);
-      state = { settings: { ...defaultState.settings, ...(imported.settings||{}) }, incomes: imported.incomes||[] };
-      saveState();
-      renderAll();
-    }catch(err){ alert('Invalid JSON'); }
-  };
-  reader.readAsText(file);
-});
-
-refs.btnReset.addEventListener('click', ()=>{
-  if(confirm('Reset all data to defaults?')){
-    state = JSON.parse(JSON.stringify(defaultState));
-    saveState();
-    renderAll();
-  }
-});
-
-// Prefill defaults for your scenario on first load
-function ensurePrefill(){
-  // If no incomes yet, leave empty; user can click "Add October Seeds"
-}
-
-// Init
-renderAll();
+render();
 </script>
 </body>
 </html>
