@@ -3,86 +3,84 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>YGP Finance — Simple</title>
+  <title>YGP Finance — Ultra Simple</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     html,body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    /* Inputs bleus lisibles */
     .input-blue{
-      background:#1e3a8a; /* blue-800 */
+      background:#1e3a8a;
       color:#fff;
-      border:1px solid #1e40af; /* blue-900 */
+      border:1px solid #1e40af;
       border-radius:0.75rem;
-      padding:0.5rem 0.75rem;
+      padding:0.6rem 1rem;
       width:100%;
-      font-size:0.9rem;
+      font-size:1rem;
     }
-    .input-blue::placeholder{ color:#bfdbfe; } /* blue-200 */
-    .input-blue:focus{ outline:2px solid #60a5fa; } /* blue-400 */
+    .input-blue::placeholder{ color:#bfdbfe; }
+    .input-blue:focus{ outline:2px solid #60a5fa; }
     .btn{display:inline-flex;align-items:center;justify-content:center;padding:0.6rem 0.9rem;border-radius:0.75rem;border:1px solid #334155;background:#f8fafc}
     .btn:hover{background:#f1f5f9}
     .btn-primary{background:#0f172a;color:#fff;border-color:#0f172a}
     .btn-primary:hover{background:#020617}
-    .card{background:rgba(255,255,255,.85);border:1px solid #e2e8f0;border-radius:1rem;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    .card{background:#ffffffd9;border:1px solid #e2e8f0;border-radius:1rem;box-shadow:0 1px 2px rgba(0,0,0,.04)}
     .pill-ok{color:#065f46;background:#d1fae5;padding:2px 8px;border-radius:999px;font-size:12px}
     .pill-alert{color:#9f1239;background:#ffe4e6;padding:2px 8px;border-radius:999px;font-size:12px}
-    .table{width:100%;font-size:0.9rem}
+    .table{width:100%;font-size:0.95rem}
     .table th{ text-align:left; color:#64748b; font-weight:600; }
-    .table td,.table th{ padding:0.5rem 0.75rem; }
-    /* petits selects alignés */
+    .table td,.table th{ padding:0.6rem 0.8rem; }
     .select-pair{display:flex;gap:8px}
     .select-pair select{min-width:110px}
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800">
+<body class="min-h-screen bg-slate-50 text-slate-800">
   <div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
 
     <header class="flex items-center justify-between">
-      <h1 class="text-xl font-bold">YGP Finance — version simple</h1>
+      <h1 class="text-xl font-bold">YGP Finance — ultra simple</h1>
       <div class="flex gap-2">
-        <button id="btnSeed" class="btn">Ajouter revenus d'octobre</button>
+        <button id="btnSeed" class="btn">Octobre (dépôt+sal.)</button>
+        <button id="btnUndo" class="btn">↩ Annuler dernière</button>
         <button id="btnReset" class="btn">Réinitialiser</button>
       </div>
     </header>
 
-    <!-- 1) Réglages essentiels -->
+    <!-- Réglages -->
     <section class="card p-4">
       <h2 class="text-base font-semibold mb-3">Réglages</h2>
       <div class="grid sm:grid-cols-2 gap-3">
-        <label class="text-sm">Start (AAAA-MM)
+        <label class="text-sm">Départ (AAAA-MM)
           <input id="startMonth" class="input-blue" value="2025-10" />
         </label>
         <label class="text-sm">Mois à prévoir
           <input id="months" type="number" class="input-blue" value="6" />
         </label>
-        <label class="text-sm">Épargne de départ (£)
+        <label class="text-sm">Épargne départ (£)
           <input id="starting" type="number" class="input-blue" value="25749" />
         </label>
-        <label class="text-sm">Coût de vie mensuel (£)
+        <label class="text-sm">Coût de vie (£/mois)
           <input id="living" type="number" class="input-blue" value="2500" />
         </label>
         <label class="text-sm">Plancher sécurité (£)
           <input id="floor" type="number" class="input-blue" value="20000" />
         </label>
-        <label class="text-sm">Tax pot musique (ex: 0.25)
+        <label class="text-sm">Tax pot musique
           <input id="taxRate" type="number" step="0.01" class="input-blue" value="0.25" />
         </label>
       </div>
     </section>
 
-    <!-- 2) Saisie ultra simple des revenus -->
+    <!-- Entrées -->
     <section class="card p-4">
       <div class="flex items-center justify-between mb-2">
-        <h2 class="text-base font-semibold">Entrées (revenus)</h2>
-        <button id="btnAddRow" class="btn btn-primary">Ajouter une ligne</button>
+        <h2 class="text-base font-semibold">Entrées</h2>
+        <button id="btnAddRow" class="btn btn-primary">+ Ajouter</button>
       </div>
       <div class="overflow-x-auto">
         <table class="table" id="incomeTable">
           <thead>
             <tr>
-              <th>Date (mois + année)</th>
-              <th>Mois (prévision)</th>
+              <th>Date (mois+année)</th>
               <th>Type</th>
               <th>Source</th>
               <th>Montant (£)</th>
@@ -94,19 +92,19 @@
           <tbody id="incomeBody"></tbody>
         </table>
       </div>
-      <p class="text-xs text-slate-500 mt-2">Utilise <b>Type = Music</b> pour appliquer la réserve (tax pot). La colonne <b>Mois</b> sert au regroupement dans la prévision.</p>
+      <p class="text-xs text-slate-500 mt-2">Choisir <b>Music</b> applique 25% de réserve. La date sert aussi pour la prévision.</p>
     </section>
 
-    <!-- 3) Prévision claire -->
+    <!-- Prévision -->
     <section class="card p-4">
-      <h2 class="text-base font-semibold mb-3">Prévision (mensuelle)</h2>
+      <h2 class="text-base font-semibold mb-3">Prévision</h2>
       <div class="overflow-x-auto">
         <table class="table" id="forecastTable">
           <thead>
             <tr>
               <th>Mois</th>
               <th>Ouverture</th>
-              <th>Entrées (hors musique)</th>
+              <th>Entrées hors musique</th>
               <th>Musique (net)</th>
               <th>Coût de vie</th>
               <th>Variation</th>
@@ -122,13 +120,10 @@
   </div>
 
 <script>
-const STORAGE='ygp_finance_simple_v2';
-let state = JSON.parse(localStorage.getItem(STORAGE)||'{}');
+const STORAGE='ygp_finance_ultra';
+let state=JSON.parse(localStorage.getItem(STORAGE)||'{}');
 if(!state.settings){
-  state = {
-    settings:{startMonth:'2025-10',months:6,starting:25749,living:2500,floor:20000,taxRate:0.25},
-    incomes:[]
-  };
+  state={settings:{startMonth:'2025-10',months:6,starting:25749,living:2500,floor:20000,taxRate:0.25},incomes:[]};
 }
 const el={
   startMonth:document.getElementById('startMonth'),
@@ -141,188 +136,34 @@ const el={
   forecastBody:document.getElementById('forecastBody'),
   btnAddRow:document.getElementById('btnAddRow'),
   btnSeed:document.getElementById('btnSeed'),
-  btnReset:document.getElementById('btnReset')
+  btnReset:document.getElementById('btnReset'),
+  btnUndo:document.getElementById('btnUndo')
 };
-function save(){ localStorage.setItem(STORAGE, JSON.stringify(state)); }
-function monthsFrom(start, n){
-  const [Y,M]=start.split('-').map(Number);
-  const d=new Date(Y,M-1,1);
-  const out=[];
-  for(let i=0;i<n;i++){ out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`); d.setMonth(d.getMonth()+1); }
+function save(){localStorage.setItem(STORAGE,JSON.stringify(state));}
+function monthsFrom(start,n){
+  const [Y,M]=start.split('-').map(Number);const d=new Date(Y,M-1,1);
+  const out=[];for(let i=0;i<n;i++){out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1);}
   return out;
 }
-function renderSettings(){
-  const s=state.settings;
-  el.startMonth.value=s.startMonth;
-  el.months.value=s.months;
-  el.starting.value=s.starting;
-  el.living.value=s.living;
-  el.floor.value=s.floor;
-  el.taxRate.value=s.taxRate;
-}
-function readSettings(){
-  const s=state.settings;
-  s.startMonth=el.startMonth.value.trim();
-  s.months=parseInt(el.months.value||6,10);
-  s.starting=parseFloat(el.starting.value||0);
-  s.living=parseFloat(el.living.value||0);
-  s.floor=parseFloat(el.floor.value||0);
-  s.taxRate=parseFloat(el.taxRate.value||0.25);
-  save(); render();
-}
-
-/* helpers dropdown */
-function yearOptions(start=2024,end=2028){
-  const a=[]; for(let y=start;y<=end;y++) a.push(`<option value="${y}">${y}</option>`); return a.join('');
-}
-function monthOptions(){
-  const names=['01','02','03','04','05','06','07','08','09','10','11','12'];
-  return names.map((m,i)=>`<option value="${m}">${m}</option>`).join('');
-}
-function makeSelectPair(currentYYYYMM, attrs){
-  const [yy,mm] = (currentYYYYMM||'').split('-');
-  return `
-    <div class="select-pair">
-      <select class="input-blue" ${attrs} data-part="year">
-        ${yearOptions()}
-      </select>
-      <select class="input-blue" ${attrs} data-part="month">
-        ${monthOptions()}
-      </select>
-    </div>
-  `;
-}
-function setPairValues(container, yymm){
-  const [yy,mm]=(yymm||'').split('-');
-  const y=container.querySelector('select[data-part="year"]');
-  const m=container.querySelector('select[data-part="month"]');
-  if(yy) y.value=yy; if(mm) m.value=mm;
-}
-function pairToYYYYMM(container){
-  const y=container.querySelector('select[data-part="year"]').value;
-  const m=container.querySelector('select[data-part="month"]').value;
-  return `${y}-${m}`;
-}
-
-/* table income */
-function addRow(row){
-  state.incomes.push(row||{date:'',month:'',type:'Other',source:'',gross:0});
-  save(); renderIncome(); renderForecast();
-}
-function delRow(i){ state.incomes.splice(i,1); save(); render(); }
-function renderIncome(){
-  el.incomeBody.innerHTML='';
-  state.incomes.forEach((r,i)=>{
-    const isMusic = r.type==='Music';
-    const tax = isMusic ? (Number(r.gross)||0) * state.settings.taxRate : 0;
-    const net = (Number(r.gross)||0) - tax;
-
-    const tr=document.createElement('tr');
-    tr.innerHTML = `
-      <td>
-        ${makeSelectPair(r.date? r.date.slice(0,7):'', `data-i="${i}" data-field="date"`)}
-      </td>
-      <td>
-        ${makeSelectPair(r.month||'', `data-i="${i}" data-field="month"`)}
-      </td>
-      <td>
-        <select class="input-blue" data-i="${i}" data-k="type">
-          <option ${r.type==='Music'?'selected':''}>Music</option>
-          <option ${r.type==='Salary'?'selected':''}>Salary</option>
-          <option ${r.type==='Other'?'selected':''}>Other</option>
-        </select>
-      </td>
-      <td><input class="input-blue" value="${r.source||''}" data-i="${i}" data-k="source" placeholder="Source"></td>
-      <td><input class="input-blue" type="number" value="${r.gross||0}" data-i="${i}" data-k="gross" placeholder="0"></td>
-      <td>£${tax.toLocaleString()}</td>
-      <td>£${net.toLocaleString()}</td>
-      <td><button class="btn" data-del="${i}">Suppr</button></td>
-    `;
-    el.incomeBody.appendChild(tr);
-
-    // set selects current values
-    setPairValues(tr.querySelector(`[data-field="date"][data-i="${i}"]`).parentElement, r.date? r.date.slice(0,7):'');
-    setPairValues(tr.querySelector(`[data-field="month"][data-i="${i}"]`).parentElement, r.month||'');
-  });
-}
-
-/* listeners income */
-el.incomeBody.addEventListener('change', (e)=>{
-  const sel = e.target.closest('select');
-  const input = e.target.closest('input');
-  const del = e.target.closest('button[data-del]');
-  if(del){ delRow(+del.getAttribute('data-del')); return; }
-
-  if(sel && sel.hasAttribute('data-i') && sel.hasAttribute('data-field')){
-    const i = +sel.getAttribute('data-i');
-    const field = sel.getAttribute('data-field'); // "date" or "month"
-    const container = sel.closest('.select-pair').parentElement; // td
-    const yymm = pairToYYYYMM(container.querySelector('.select-pair'));
-    if(field==='date'){ state.incomes[i].date = `${yymm}-01`; }
-    if(field==='month'){ state.incomes[i].month = yymm; }
-    save(); render();
-    return;
-  }
-  if(input && input.hasAttribute('data-i')){
-    const i = +input.getAttribute('data-i');
-    const k = input.getAttribute('data-k');
-    let v = input.value;
-    if(k==='gross') v = parseFloat(v||0);
-    state.incomes[i][k] = v;
-    save(); render();
-  }
-});
-
-/* forecast */
-function sum(arr, fn){ return arr.reduce((a,b)=>a+(fn(b)||0),0); }
-function renderForecast(){
-  const s=state.settings;
-  const months=monthsFrom(s.startMonth,s.months);
-  let opening=s.starting;
-  el.forecastBody.innerHTML='';
-  months.forEach(m=>{
-    const rows=state.incomes.filter(r=>r.month===m);
-    const nonMusic=sum(rows,r=> r.type!=='Music'? +r.gross:0);
-    const musicNet=sum(rows,r=> r.type==='Music'? (+r.gross - (+r.gross*s.taxRate)):0 );
-    const inflows=nonMusic+musicNet;
-    const change=inflows - s.living;
-    const closing=opening + change;
-    const ok=closing>=s.floor;
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${m}</td>
-      <td>£${opening.toLocaleString()}</td>
-      <td>£${nonMusic.toLocaleString()}</td>
-      <td>£${musicNet.toLocaleString()}</td>
-      <td>£${s.living.toLocaleString()}</td>
-      <td class="${change<0?'text-rose-600':''}">£${change.toLocaleString()}</td>
-      <td class="${ok?'':'text-rose-600 font-semibold'}">£${closing.toLocaleString()}</td>
-      <td><span class="${ok?'pill-ok':'pill-alert'}">${ok?'OK':'< £20k'}</span></td>
-    `;
-    el.forecastBody.appendChild(tr);
-    opening=closing;
-  });
-}
-function render(){ renderSettings(); renderIncome(); renderForecast(); }
-
-/* Buttons */
-el.btnAddRow.addEventListener('click',()=> addRow());
-el.btnSeed.addEventListener('click',()=>{
-  addRow({date:'2025-10-01',month:'2025-10',type:'Other',source:'Flat deposit refund',gross:1000});
-  addRow({date:'2025-10-01',month:'2025-10',type:'Salary',source:'Final PAYE salary',gross:3300});
-});
-el.btnReset.addEventListener('click',()=>{
-  if(confirm('Tout réinitialiser ?')){
-    state={settings:{startMonth:'2025-10',months:6,starting:25749,living:2500,floor:20000,taxRate:0.25}, incomes:[]};
-    save(); render();
-  }
-});
-
-/* settings change */
-['startMonth','months','starting','living','floor','taxRate'].forEach(id=>{
-  document.getElementById(id).addEventListener('change', readSettings);
-});
-
+function renderSettings(){const s=state.settings;el.startMonth.value=s.startMonth;el.months.value=s.months;el.starting.value=s.starting;el.living.value=s.living;el.floor.value=s.floor;el.taxRate.value=s.taxRate;}
+function readSettings(){const s=state.settings;s.startMonth=el.startMonth.value.trim();s.months=+el.months.value||6;s.starting=+el.starting.value||0;s.living=+el.living.value||0;s.floor=+el.floor.value||0;s.taxRate=+el.taxRate.value||0.25;save();render();}
+function yearOptions(start=2024,end=2028){let a='';for(let y=start;y<=end;y++)a+=`<option value=\"${y}\">${y}</option>`;return a;}
+function monthOptions(){return['01','02','03','04','05','06','07','08','09','10','11','12'].map(m=>`<option value=\"${m}\">${m}</option>`).join('');}
+function makeSelectPair(currentYYYYMM,attrs){const[yy,mm]=(currentYYYYMM||'').split('-');return `<div class=\"select-pair\"><select class=\"input-blue\" ${attrs} data-part=\"year\">${yearOptions()}</select><select class=\"input-blue\" ${attrs} data-part=\"month\">${monthOptions()}</select></div>`;}
+function setPairValues(container,yymm){const[yy,mm]=(yymm||'').split('-');const y=container.querySelector('select[data-part=\"year\"]');const m=container.querySelector('select[data-part=\"month\"]');if(yy)y.value=yy;if(mm)m.value=mm;}
+function pairToYYYYMM(container){const y=container.querySelector('select[data-part=\"year\"]').value;const m=container.querySelector('select[data-part=\"month\"]').value;return`${y}-${m}`;}
+function addRow(r){state.incomes.push(r||{date:'',type:'Other',source:'',gross:0});save();render();}
+function undoRow(){state.incomes.pop();save();render();}
+function renderIncome(){el.incomeBody.innerHTML='';state.incomes.forEach((r,i)=>{const isMusic=r.type==='Music';const tax=isMusic?(+r.gross||0)*state.settings.taxRate:0;const net=(+r.gross||0)-tax;const tr=document.createElement('tr');tr.innerHTML=`<td>${makeSelectPair(r.date? r.date.slice(0,7):'',`data-i=\"${i}\" data-field=\"date\"`)}</td><td><select class=\"input-blue\" data-i=\"${i}\" data-k=\"type\"><option ${r.type==='Music'?'selected':''}>Music</option><option ${r.type==='Salary'?'selected':''}>Salary</option><option ${r.type==='Other'?'selected':''}>Other</option></select></td><td><input class=\"input-blue\" value=\"${r.source||''}\" data-i=\"${i}\" data-k=\"source\"></td><td><input class=\"input-blue\" type=\"number\" value=\"${r.gross||0}\" data-i=\"${i}\" data-k=\"gross\"></td><td>£${tax.toLocaleString()}</td><td>£${net.toLocaleString()}</td><td><button class=\"btn\" data-del=\"${i}\">Suppr</button></td>`;el.incomeBody.appendChild(tr);setPairValues(tr.querySelector(`[data-field=\"date\"][data-i=\"${i}\"]`).parentElement,r.date? r.date.slice(0,7):'');});}
+el.incomeBody.addEventListener('change',e=>{const sel=e.target.closest('select');const inp=e.target.closest('input');const del=e.target.closest('button[data-del]');if(del){state.incomes.splice(+del.getAttribute('data-del'),1);save();render();return;}if(sel&&sel.hasAttribute('data-field')){const i=+sel.getAttribute('data-i');const yymm=pairToYYYYMM(sel.closest('.select-pair'));state.incomes[i].date=`${yymm}-01`;save();render();return;}if(inp&&inp.hasAttribute('data-i')){const i=+inp.getAttribute('data-i');const k=inp.getAttribute('data-k');let v=inp.value;if(k==='gross')v=+v||0;state.incomes[i][k]=v;save();render();}});
+function sum(a,f){return a.reduce((x,y)=>x+(f(y)||0),0);}
+function renderForecast(){const s=state.settings;const months=monthsFrom(s.startMonth,s.months);let opening=s.starting;el.forecastBody.innerHTML='';months.forEach(m=>{const rows=state.incomes.filter(r=>r.date.startsWith(m));const nonMusic=sum(rows,r=>r.type!=='Music'?+r.gross:0);const musicNet=sum(rows,r=>r.type==='Music'?(+r.gross-(+r.gross*s.taxRate)):0);const inflows=nonMusic+musicNet;const change=inflows-s.living;const closing=opening+change;const ok=closing>=s.floor;const tr=document.createElement('tr');tr.innerHTML=`<td>${m}</td><td>£${opening.toLocaleString()}</td><td>£${nonMusic.toLocaleString()}</td><td>£${musicNet.toLocaleString()}</td><td>£${s.living.toLocaleString()}</td><td class=\"${change<0?'text-rose-600':''}\">£${change.toLocaleString()}</td><td class=\"${ok?'':'text-rose-600 font-semibold'}\">£${closing.toLocaleString()}</td><td><span class=\"${ok?'pill-ok':'pill-alert'}\">${ok?'OK':'< £20k'}</span></td>`;el.forecastBody.appendChild(tr);opening=closing;});}
+function render(){renderSettings();renderIncome();renderForecast();}
+el.btnAddRow.addEventListener('click',()=>addRow());
+el.btnUndo.addEventListener('click',()=>undoRow());
+el.btnSeed.addEventListener('click',()=>{addRow({date:'2025-10-01',type:'Other',source:'Flat deposit refund',gross:1000});addRow({date:'2025-10-01',type:'Salary',source:'Final PAYE salary',gross:3300});});
+el.btnReset.addEventListener('click',()=>{if(confirm('Tout réinitialiser ?')){state={settings:{startMonth:'2025-10',months:6,starting:25749,living:2500,floor:20000,taxRate:0.25},incomes:[]};save();render();}});
+['startMonth','months','starting','living','floor','taxRate'].forEach(id=>{document.getElementById(id).addEventListener('change',readSettings);});
 render();
 </script>
 </body>
