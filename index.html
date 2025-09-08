@@ -1,170 +1,1574 @@
-<!doctype html>
-<html lang="fr">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>YGP Finance — Ultra Simple</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    html,body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    .input-blue{
-      background:#1e3a8a;
-      color:#fff;
-      border:1px solid #1e40af;
-      border-radius:0.75rem;
-      padding:0.6rem 1rem;
-      width:100%;
-      font-size:1rem;
-    }
-    .input-blue::placeholder{ color:#bfdbfe; }
-    .input-blue:focus{ outline:2px solid #60a5fa; }
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:0.6rem 0.9rem;border-radius:0.75rem;border:1px solid #334155;background:#f8fafc}
-    .btn:hover{background:#f1f5f9}
-    .btn-primary{background:#0f172a;color:#fff;border-color:#0f172a}
-    .btn-primary:hover{background:#020617}
-    .card{background:#ffffffd9;border:1px solid #e2e8f0;border-radius:1rem;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-    .pill-ok{color:#065f46;background:#d1fae5;padding:2px 8px;border-radius:999px;font-size:12px}
-    .pill-alert{color:#9f1239;background:#ffe4e6;padding:2px 8px;border-radius:999px;font-size:12px}
-    .table{width:100%;font-size:0.95rem}
-    .table th{ text-align:left; color:#64748b; font-weight:600; }
-    .table td,.table th{ padding:0.6rem 0.8rem; }
-    .select-pair{display:flex;gap:8px}
-    .select-pair select{min-width:110px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YGP Finance Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html, body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        
+        /* Theme variables */
+        :root {
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #ffffff;
+            --bg-secondary-light: #f8fafc;
+            --text-light: #0f172a;
+            --text-secondary-light: #64748b;
+            --border-light: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --bg-light: #0f172a;
+            --bg-secondary-light: #1e293b;
+            --text-light: #f1f5f9;
+            --text-secondary-light: #94a3b8;
+            --border-light: #334155;
+        }
+
+        body {
+            background-color: var(--bg-secondary-light);
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+
+        /* Custom components */
+        .card {
+            background: var(--bg-light);
+            border: 1px solid var(--border-light);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .input-field {
+            background: var(--bg-light);
+            border: 2px solid var(--border-light);
+            color: var(--text-light);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary-light);
+            color: var(--text-light);
+            border: 2px solid var(--border-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-light);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-safe {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-danger {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        [data-theme="dark"] .status-safe {
+            background: #166534;
+            color: #dcfce7;
+        }
+
+        [data-theme="dark"] .status-warning {
+            background: #92400e;
+            color: #fef3c7;
+        }
+
+        [data-theme="dark"] .status-danger {
+            background: #991b1b;
+            color: #fecaca;
+        }
+
+        /* Animation utilities */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive table */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 0.75rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        th {
+            background: var(--bg-secondary-light);
+            font-weight: 600;
+            color: var(--text-secondary-light);
+        }
+
+        tr:hover td {
+            background: var(--bg-secondary-light);
+        }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--bg-light);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* Hide scrollbar for webkit browsers */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800">
-  <div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
+<body>
+    <!-- Main container -->
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                            🎵 YGP Finance Tracker
+                        </h1>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            Personal Finance • Music Career
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        <!-- Current balance display -->
+                        <div class="text-right mr-4">
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Current Balance</div>
+                            <div id="currentBalance" class="text-lg font-bold text-green-600 dark:text-green-400">
+                                £0
+                            </div>
+                        </div>
+                        
+                        <!-- Quick actions -->
+                        <button id="btnQuickAdd" class="btn btn-primary">
+                            <span class="mr-2">+</span> Quick Add
+                        </button>
+                        
+                        <button id="btnExport" class="btn btn-secondary">
+                            📊 Export
+                        </button>
+                        
+                        <button id="btnImport" class="btn btn-secondary">
+                            📁 Import
+                        </button>
+                        
+                        <!-- Theme toggle -->
+                        <button id="themeToggle" class="btn btn-secondary p-2">
+                            <span id="themeIcon">🌙</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
 
-    <header class="flex items-center justify-between">
-      <h1 class="text-xl font-bold">YGP Finance — ultra simple</h1>
-      <div class="flex gap-2">
-        <button id="btnSeed" class="btn">Octobre (dépôt+sal.)</button>
-        <button id="btnUndo" class="btn">↩ Annuler dernière</button>
-        <button id="btnReset" class="btn">Réinitialiser</button>
-      </div>
-    </header>
+        <!-- Main content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Dashboard overview -->
+            <section class="mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <!-- Total Balance -->
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Total Balance</p>
+                                <p id="totalBalance" class="text-2xl font-bold text-gray-900 dark:text-white">£0</p>
+                            </div>
+                            <div class="text-3xl">💰</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tax Pot -->
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Tax Pot</p>
+                                <p id="taxPot" class="text-2xl font-bold text-orange-600 dark:text-orange-400">£0</p>
+                            </div>
+                            <div class="text-3xl">🏛️</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Monthly Spending -->
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Monthly Cost</p>
+                                <p id="monthlyCost" class="text-2xl font-bold text-red-600 dark:text-red-400">£2,500</p>
+                            </div>
+                            <div class="text-3xl">🏠</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Safety Buffer -->
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Safety Buffer</p>
+                                <p id="safetyBuffer" class="text-2xl font-bold">£0</p>
+                            </div>
+                            <div class="text-3xl">🛡️</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-    <!-- Réglages -->
-    <section class="card p-4">
-      <h2 class="text-base font-semibold mb-3">Réglages</h2>
-      <div class="grid sm:grid-cols-2 gap-3">
-        <label class="text-sm">Départ (AAAA-MM)
-          <input id="startMonth" class="input-blue" value="2025-10" />
-        </label>
-        <label class="text-sm">Mois à prévoir
-          <input id="months" type="number" class="input-blue" value="6" />
-        </label>
-        <label class="text-sm">Épargne départ (£)
-          <input id="starting" type="number" class="input-blue" value="25749" />
-        </label>
-        <label class="text-sm">Coût de vie (£/mois)
-          <input id="living" type="number" class="input-blue" value="2500" />
-        </label>
-        <label class="text-sm">Plancher sécurité (£)
-          <input id="floor" type="number" class="input-blue" value="20000" />
-        </label>
-        <label class="text-sm">Tax pot musique
-          <input id="taxRate" type="number" step="0.01" class="input-blue" value="0.25" />
-        </label>
-      </div>
-    </section>
+            <!-- Tabs navigation -->
+            <div class="mb-6">
+                <nav class="flex space-x-8 border-b border-gray-200 dark:border-gray-700">
+                    <button class="tab-btn active" data-tab="transactions">
+                        📝 Transactions
+                    </button>
+                    <button class="tab-btn" data-tab="forecast">
+                        📈 Forecast
+                    </button>
+                    <button class="tab-btn" data-tab="charts">
+                        📊 Charts
+                    </button>
+                    <button class="tab-btn" data-tab="settings">
+                        ⚙️ Settings
+                    </button>
+                </nav>
+            </div>
 
-    <!-- Entrées -->
-    <section class="card p-4">
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="text-base font-semibold">Entrées</h2>
-        <button id="btnAddRow" class="btn btn-primary">+ Ajouter</button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="table" id="incomeTable">
-          <thead>
-            <tr>
-              <th>Date (mois+année)</th>
-              <th>Type</th>
-              <th>Source</th>
-              <th>Montant (£)</th>
-              <th>Tax pot</th>
-              <th>Net</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="incomeBody"></tbody>
-        </table>
-      </div>
-      <p class="text-xs text-slate-500 mt-2">Choisir <b>Music</b> applique 25% de réserve. La date sert aussi pour la prévision.</p>
-    </section>
+            <!-- Tab content -->
+            <div class="tab-content">
+                <!-- Transactions Tab -->
+                <div id="tab-transactions" class="tab-panel active">
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-xl font-bold">Transaction History</h2>
+                            <div class="flex space-x-3">
+                                <button id="btnAddTransaction" class="btn btn-primary">
+                                    + Add Transaction
+                                </button>
+                                <button id="btnUndo" class="btn btn-secondary" disabled>
+                                    ↶ Undo
+                                </button>
+                                <button id="btnRedo" class="btn btn-secondary" disabled>
+                                    ↷ Redo
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Filters -->
+                        <div class="mb-4 flex flex-wrap gap-4">
+                            <select id="filterType" class="input-field max-w-xs">
+                                <option value="">All Types</option>
+                                <option value="Music">Music</option>
+                                <option value="Salary">Salary</option>
+                                <option value="Other Income">Other Income</option>
+                                <option value="Expense">Expense</option>
+                            </select>
+                            
+                            <input type="month" id="filterMonth" class="input-field max-w-xs">
+                            
+                            <input type="text" id="filterSearch" placeholder="Search transactions..." 
+                                   class="input-field max-w-xs">
+                        </div>
+                        
+                        <!-- Transactions table -->
+                        <div class="table-responsive">
+                            <table id="transactionsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Source/Description</th>
+                                        <th>Amount</th>
+                                        <th>Tax</th>
+                                        <th>Net</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionsBody">
+                                    <!-- Transactions will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Prévision -->
-    <section class="card p-4">
-      <h2 class="text-base font-semibold mb-3">Prévision</h2>
-      <div class="overflow-x-auto">
-        <table class="table" id="forecastTable">
-          <thead>
-            <tr>
-              <th>Mois</th>
-              <th>Ouverture</th>
-              <th>Entrées hors musique</th>
-              <th>Musique (net)</th>
-              <th>Coût de vie</th>
-              <th>Variation</th>
-              <th>Clôture</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody id="forecastBody"></tbody>
-        </table>
-      </div>
-    </section>
+                <!-- Forecast Tab -->
+                <div id="tab-forecast" class="tab-panel">
+                    <div class="card p-6">
+                        <h2 class="text-xl font-bold mb-6">Financial Forecast</h2>
+                        
+                        <div class="table-responsive">
+                            <table id="forecastTable">
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th>Opening Balance</th>
+                                        <th>Total Income</th>
+                                        <th>Living Costs</th>
+                                        <th>Net Change</th>
+                                        <th>Closing Balance</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="forecastBody">
+                                    <!-- Forecast data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-  </div>
+                <!-- Charts Tab -->
+                <div id="tab-charts" class="tab-panel">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Balance Over Time -->
+                        <div class="card p-6">
+                            <h3 class="text-lg font-bold mb-4">Balance Over Time</h3>
+                            <div class="chart-container">
+                                <canvas id="balanceChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Income vs Expenses -->
+                        <div class="card p-6">
+                            <h3 class="text-lg font-bold mb-4">Monthly Income vs Expenses</h3>
+                            <div class="chart-container">
+                                <canvas id="incomeExpenseChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Tax Pot Evolution -->
+                        <div class="card p-6">
+                            <h3 class="text-lg font-bold mb-4">Tax Pot Evolution</h3>
+                            <div class="chart-container">
+                                <canvas id="taxChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Income Sources -->
+                        <div class="card p-6">
+                            <h3 class="text-lg font-bold mb-4">Income Sources</h3>
+                            <div class="chart-container">
+                                <canvas id="incomeSourceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-<script>
-const STORAGE='ygp_finance_ultra';
-let state=JSON.parse(localStorage.getItem(STORAGE)||'{}');
-if(!state.settings){
-  state={settings:{startMonth:'2025-10',months:6,starting:25749,living:2500,floor:20000,taxRate:0.25},incomes:[]};
-}
-const el={
-  startMonth:document.getElementById('startMonth'),
-  months:document.getElementById('months'),
-  starting:document.getElementById('starting'),
-  living:document.getElementById('living'),
-  floor:document.getElementById('floor'),
-  taxRate:document.getElementById('taxRate'),
-  incomeBody:document.getElementById('incomeBody'),
-  forecastBody:document.getElementById('forecastBody'),
-  btnAddRow:document.getElementById('btnAddRow'),
-  btnSeed:document.getElementById('btnSeed'),
-  btnReset:document.getElementById('btnReset'),
-  btnUndo:document.getElementById('btnUndo')
-};
-function save(){localStorage.setItem(STORAGE,JSON.stringify(state));}
-function monthsFrom(start,n){
-  const [Y,M]=start.split('-').map(Number);const d=new Date(Y,M-1,1);
-  const out=[];for(let i=0;i<n;i++){out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1);}
-  return out;
-}
-function renderSettings(){const s=state.settings;el.startMonth.value=s.startMonth;el.months.value=s.months;el.starting.value=s.starting;el.living.value=s.living;el.floor.value=s.floor;el.taxRate.value=s.taxRate;}
-function readSettings(){const s=state.settings;s.startMonth=el.startMonth.value.trim();s.months=+el.months.value||6;s.starting=+el.starting.value||0;s.living=+el.living.value||0;s.floor=+el.floor.value||0;s.taxRate=+el.taxRate.value||0.25;save();render();}
-function yearOptions(start=2024,end=2028){let a='';for(let y=start;y<=end;y++)a+=`<option value=\"${y}\">${y}</option>`;return a;}
-function monthOptions(){return['01','02','03','04','05','06','07','08','09','10','11','12'].map(m=>`<option value=\"${m}\">${m}</option>`).join('');}
-function makeSelectPair(currentYYYYMM,attrs){const[yy,mm]=(currentYYYYMM||'').split('-');return `<div class=\"select-pair\"><select class=\"input-blue\" ${attrs} data-part=\"year\">${yearOptions()}</select><select class=\"input-blue\" ${attrs} data-part=\"month\">${monthOptions()}</select></div>`;}
-function setPairValues(container,yymm){const[yy,mm]=(yymm||'').split('-');const y=container.querySelector('select[data-part=\"year\"]');const m=container.querySelector('select[data-part=\"month\"]');if(yy)y.value=yy;if(mm)m.value=mm;}
-function pairToYYYYMM(container){const y=container.querySelector('select[data-part=\"year\"]').value;const m=container.querySelector('select[data-part=\"month\"]').value;return`${y}-${m}`;}
-function addRow(r){state.incomes.push(r||{date:'',type:'Other',source:'',gross:0});save();render();}
-function undoRow(){state.incomes.pop();save();render();}
-function renderIncome(){el.incomeBody.innerHTML='';state.incomes.forEach((r,i)=>{const isMusic=r.type==='Music';const tax=isMusic?(+r.gross||0)*state.settings.taxRate:0;const net=(+r.gross||0)-tax;const tr=document.createElement('tr');tr.innerHTML=`<td>${makeSelectPair(r.date? r.date.slice(0,7):'',`data-i=\"${i}\" data-field=\"date\"`)}</td><td><select class=\"input-blue\" data-i=\"${i}\" data-k=\"type\"><option ${r.type==='Music'?'selected':''}>Music</option><option ${r.type==='Salary'?'selected':''}>Salary</option><option ${r.type==='Other'?'selected':''}>Other</option></select></td><td><input class=\"input-blue\" value=\"${r.source||''}\" data-i=\"${i}\" data-k=\"source\"></td><td><input class=\"input-blue\" type=\"number\" value=\"${r.gross||0}\" data-i=\"${i}\" data-k=\"gross\"></td><td>£${tax.toLocaleString()}</td><td>£${net.toLocaleString()}</td><td><button class=\"btn\" data-del=\"${i}\">Suppr</button></td>`;el.incomeBody.appendChild(tr);setPairValues(tr.querySelector(`[data-field=\"date\"][data-i=\"${i}\"]`).parentElement,r.date? r.date.slice(0,7):'');});}
-el.incomeBody.addEventListener('change',e=>{const sel=e.target.closest('select');const inp=e.target.closest('input');const del=e.target.closest('button[data-del]');if(del){state.incomes.splice(+del.getAttribute('data-del'),1);save();render();return;}if(sel&&sel.hasAttribute('data-field')){const i=+sel.getAttribute('data-i');const yymm=pairToYYYYMM(sel.closest('.select-pair'));state.incomes[i].date=`${yymm}-01`;save();render();return;}if(inp&&inp.hasAttribute('data-i')){const i=+inp.getAttribute('data-i');const k=inp.getAttribute('data-k');let v=inp.value;if(k==='gross')v=+v||0;state.incomes[i][k]=v;save();render();}});
-function sum(a,f){return a.reduce((x,y)=>x+(f(y)||0),0);}
-function renderForecast(){const s=state.settings;const months=monthsFrom(s.startMonth,s.months);let opening=s.starting;el.forecastBody.innerHTML='';months.forEach(m=>{const rows=state.incomes.filter(r=>r.date.startsWith(m));const nonMusic=sum(rows,r=>r.type!=='Music'?+r.gross:0);const musicNet=sum(rows,r=>r.type==='Music'?(+r.gross-(+r.gross*s.taxRate)):0);const inflows=nonMusic+musicNet;const change=inflows-s.living;const closing=opening+change;const ok=closing>=s.floor;const tr=document.createElement('tr');tr.innerHTML=`<td>${m}</td><td>£${opening.toLocaleString()}</td><td>£${nonMusic.toLocaleString()}</td><td>£${musicNet.toLocaleString()}</td><td>£${s.living.toLocaleString()}</td><td class=\"${change<0?'text-rose-600':''}\">£${change.toLocaleString()}</td><td class=\"${ok?'':'text-rose-600 font-semibold'}\">£${closing.toLocaleString()}</td><td><span class=\"${ok?'pill-ok':'pill-alert'}\">${ok?'OK':'< £20k'}</span></td>`;el.forecastBody.appendChild(tr);opening=closing;});}
-function render(){renderSettings();renderIncome();renderForecast();}
-el.btnAddRow.addEventListener('click',()=>addRow());
-el.btnUndo.addEventListener('click',()=>undoRow());
-el.btnSeed.addEventListener('click',()=>{addRow({date:'2025-10-01',type:'Other',source:'Flat deposit refund',gross:1000});addRow({date:'2025-10-01',type:'Salary',source:'Final PAYE salary',gross:3300});});
-el.btnReset.addEventListener('click',()=>{if(confirm('Tout réinitialiser ?')){state={settings:{startMonth:'2025-10',months:6,starting:25749,living:2500,floor:20000,taxRate:0.25},incomes:[]};save();render();}});
-['startMonth','months','starting','living','floor','taxRate'].forEach(id=>{document.getElementById(id).addEventListener('change',readSettings);});
-render();
-</script>
+                <!-- Settings Tab -->
+                <div id="tab-settings" class="tab-panel">
+                    <div class="card p-6">
+                        <h2 class="text-xl font-bold mb-6">Settings</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Starting Balance (£)</label>
+                                <input type="number" id="startingBalance" class="input-field" value="25749">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Monthly Living Costs (£)</label>
+                                <input type="number" id="livingCosts" class="input-field" value="2500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Safety Threshold (£)</label>
+                                <input type="number" id="safetyThreshold" class="input-field" value="20000">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Music Tax Rate (%)</label>
+                                <input type="number" id="musicTaxRate" class="input-field" value="25" min="0" max="100">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Forecast Months</label>
+                                <input type="number" id="forecastMonths" class="input-field" value="12" min="1" max="24">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Currency</label>
+                                <select id="currency" class="input-field">
+                                    <option value="GBP">GBP (£)</option>
+                                    <option value="USD">USD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 flex space-x-4">
+                            <button id="btnSaveSettings" class="btn btn-success">
+                                Save Settings
+                            </button>
+                            
+                            <button id="btnResetData" class="btn btn-danger">
+                                Reset All Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div id="transactionModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modalTitle" class="text-xl font-bold">Add Transaction</h3>
+                <button id="closeModal" class="text-2xl">&times;</button>
+            </div>
+            
+            <form id="transactionForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Date</label>
+                        <input type="date" id="modalDate" class="input-field" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Type</label>
+                        <select id="modalType" class="input-field" required>
+                            <option value="Music">Music Income</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Other Income">Other Income</option>
+                            <option value="Expense">Expense</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Source/Description</label>
+                        <input type="text" id="modalSource" class="input-field" 
+                               placeholder="e.g., Spotify royalties, Client payment..." required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Amount (£)</label>
+                        <input type="number" id="modalAmount" class="input-field" 
+                               step="0.01" min="0" required>
+                    </div>
+                    
+                    <div id="taxInfo" class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                            <strong>Music Income:</strong> 25% will be automatically reserved for tax.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" id="cancelModal" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <span id="submitBtnText">Add Transaction</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="fileInput" accept=".json,.csv" style="display: none;">
+
+    <script>
+        // Application state and data management
+        class FinanceTracker {
+            constructor() {
+                this.data = this.loadData();
+                this.history = [];
+                this.historyIndex = -1;
+                this.charts = {};
+                this.init();
+            }
+
+            // Data structure initialization
+            getDefaultData() {
+                return {
+                    settings: {
+                        startingBalance: 25749,
+                        livingCosts: 2500,
+                        safetyThreshold: 20000,
+                        musicTaxRate: 25,
+                        forecastMonths: 12,
+                        currency: 'GBP'
+                    },
+                    transactions: [],
+                    version: '1.0'
+                };
+            }
+
+            // Load data from localStorage
+            loadData() {
+                try {
+                    const saved = localStorage.getItem('ygp_finance_tracker');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        // Ensure all required properties exist
+                        return { ...this.getDefaultData(), ...data };
+                    }
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                }
+                return this.getDefaultData();
+            }
+
+            // Save data to localStorage
+            saveData() {
+                try {
+                    localStorage.setItem('ygp_finance_tracker', JSON.stringify(this.data));
+                } catch (error) {
+                    console.error('Error saving data:', error);
+                    alert('Error saving data. Your changes may not be preserved.');
+                }
+            }
+
+            // Add transaction with history support
+            addTransaction(transaction) {
+                // Save current state to history
+                this.saveToHistory();
+                
+                // Add new transaction
+                transaction.id = Date.now() + Math.random();
+                transaction.timestamp = new Date().toISOString();
+                this.data.transactions.push(transaction);
+                
+                // Calculate tax for music income
+                if (transaction.type === 'Music') {
+                    transaction.tax = transaction.amount * (this.data.settings.musicTaxRate / 100);
+                    transaction.net = transaction.amount - transaction.tax;
+                } else {
+                    transaction.tax = 0;
+                    transaction.net = transaction.amount;
+                }
+                
+                this.saveData();
+                this.render();
+            }
+
+            // Edit transaction
+            editTransaction(id, updatedTransaction) {
+                this.saveToHistory();
+                
+                const index = this.data.transactions.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    this.data.transactions[index] = { ...this.data.transactions[index], ...updatedTransaction };
+                    
+                    // Recalculate tax and net
+                    const transaction = this.data.transactions[index];
+                    if (transaction.type === 'Music') {
+                        transaction.tax = transaction.amount * (this.data.settings.musicTaxRate / 100);
+                        transaction.net = transaction.amount - transaction.tax;
+                    } else {
+                        transaction.tax = 0;
+                        transaction.net = transaction.amount;
+                    }
+                    
+                    this.saveData();
+                    this.render();
+                }
+            }
+
+            // Delete transaction
+            deleteTransaction(id) {
+                this.saveToHistory();
+                
+                this.data.transactions = this.data.transactions.filter(t => t.id !== id);
+                this.saveData();
+                this.render();
+            }
+
+            // History management
+            saveToHistory() {
+                // Remove any redo history when making new changes
+                this.history = this.history.slice(0, this.historyIndex + 1);
+                
+                // Add current state to history
+                this.history.push(JSON.parse(JSON.stringify(this.data)));
+                
+                // Limit history size
+                if (this.history.length > 50) {
+                    this.history.shift();
+                } else {
+                    this.historyIndex++;
+                }
+                
+                this.updateUndoRedoButtons();
+            }
+
+            // Undo last action
+            undo() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    this.data = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
+                    this.saveData();
+                    this.render();
+                    this.updateUndoRedoButtons();
+                }
+            }
+
+            // Redo last undone action
+            redo() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    this.data = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
+                    this.saveData();
+                    this.render();
+                    this.updateUndoRedoButtons();
+                }
+            }
+
+            // Update undo/redo button states
+            updateUndoRedoButtons() {
+                const undoBtn = document.getElementById('btnUndo');
+                const redoBtn = document.getElementById('btnRedo');
+                
+                undoBtn.disabled = this.historyIndex <= 0;
+                redoBtn.disabled = this.historyIndex >= this.history.length - 1;
+            }
+
+            // Calculate current balance
+            getCurrentBalance() {
+                const totalIncome = this.data.transactions
+                    .filter(t => t.type !== 'Expense')
+                    .reduce((sum, t) => sum + t.net, 0);
+                
+                const totalExpenses = this.data.transactions
+                    .filter(t => t.type === 'Expense')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                return this.data.settings.startingBalance + totalIncome - totalExpenses;
+            }
+
+            // Calculate tax pot
+            getTaxPot() {
+                return this.data.transactions
+                    .filter(t => t.type === 'Music')
+                    .reduce((sum, t) => sum + t.tax, 0);
+            }
+
+            // Get forecast data
+            getForecastData() {
+                const months = [];
+                const currentDate = new Date();
+                let balance = this.getCurrentBalance();
+                
+                for (let i = 0; i < this.data.settings.forecastMonths; i++) {
+                    const date = new Date(currentDate);
+                    date.setMonth(date.getMonth() + i);
+                    
+                    const monthKey = date.toISOString().substring(0, 7);
+                    const monthTransactions = this.data.transactions.filter(t => 
+                        t.date.startsWith(monthKey)
+                    );
+                    
+                    const income = monthTransactions
+                        .filter(t => t.type !== 'Expense')
+                        .reduce((sum, t) => sum + t.net, 0);
+                    
+                    const expenses = monthTransactions
+                        .filter(t => t.type === 'Expense')
+                        .reduce((sum, t) => sum + t.amount, 0) + this.data.settings.livingCosts;
+                    
+                    const netChange = income - expenses;
+                    const closingBalance = balance + netChange;
+                    
+                    months.push({
+                        month: date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' }),
+                        openingBalance: balance,
+                        income,
+                        expenses,
+                        netChange,
+                        closingBalance,
+                        isSafe: closingBalance >= this.data.settings.safetyThreshold
+                    });
+                    
+                    balance = closingBalance;
+                }
+                
+                return months;
+            }
+
+            // Export data
+            exportData(format = 'json') {
+                const data = this.data;
+                const filename = `ygp-finance-export-${new Date().toISOString().split('T')[0]}`;
+                
+                if (format === 'json') {
+                    this.downloadFile(JSON.stringify(data, null, 2), `${filename}.json`, 'application/json');
+                } else if (format === 'csv') {
+                    const csv = this.convertToCSV(data.transactions);
+                    this.downloadFile(csv, `${filename}.csv`, 'text/csv');
+                }
+            }
+
+            // Convert transactions to CSV
+            convertToCSV(transactions) {
+                const headers = ['Date', 'Type', 'Source', 'Amount', 'Tax', 'Net'];
+                const rows = transactions.map(t => [
+                    t.date,
+                    t.type,
+                    t.source,
+                    t.amount,
+                    t.tax || 0,
+                    t.net
+                ]);
+                
+                return [headers, ...rows].map(row => 
+                    row.map(field => `"${field}"`).join(',')
+                ).join('\n');
+            }
+
+            // Download file helper
+            downloadFile(content, filename, contentType) {
+                const blob = new Blob([content], { type: contentType });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+
+            // Import data
+            importData(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        let importedData;
+                        
+                        if (file.name.endsWith('.json')) {
+                            importedData = JSON.parse(e.target.result);
+                        } else if (file.name.endsWith('.csv')) {
+                            importedData = this.parseCSV(e.target.result);
+                        }
+                        
+                        if (importedData) {
+                            if (confirm('This will replace all current data. Are you sure?')) {
+                                this.data = { ...this.getDefaultData(), ...importedData };
+                                this.saveData();
+                                this.render();
+                                alert('Data imported successfully!');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Import error:', error);
+                        alert('Error importing data. Please check the file format.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            // Parse CSV data
+            parseCSV(csvText) {
+                // Simple CSV parser - in production, you'd want a more robust solution
+                const lines = csvText.split('\n');
+                const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+                const transactions = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim()) {
+                        const values = lines[i].split(',').map(v => v.replace(/"/g, ''));
+                        transactions.push({
+                            id: Date.now() + Math.random(),
+                            date: values[0],
+                            type: values[1],
+                            source: values[2],
+                            amount: parseFloat(values[3]),
+                            tax: parseFloat(values[4]) || 0,
+                            net: parseFloat(values[5]),
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                }
+                
+                return { transactions };
+            }
+
+            // Initialize the application
+            init() {
+                this.setupEventListeners();
+                this.setupTheme();
+                this.render();
+                
+                // Save initial state to history
+                this.history.push(JSON.parse(JSON.stringify(this.data)));
+                this.historyIndex = 0;
+                this.updateUndoRedoButtons();
+            }
+
+            // Setup event listeners
+            setupEventListeners() {
+                // Tab switching
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.switchTab(e.target.dataset.tab);
+                    });
+                });
+
+                // Main action buttons
+                document.getElementById('btnQuickAdd').addEventListener('click', () => {
+                    this.openTransactionModal();
+                });
+
+                document.getElementById('btnExport').addEventListener('click', () => {
+                    this.showExportOptions();
+                });
+
+                document.getElementById('btnImport').addEventListener('click', () => {
+                    document.getElementById('fileInput').click();
+                });
+
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        this.importData(e.target.files[0]);
+                    }
+                });
+
+                // Transaction actions
+                document.getElementById('btnAddTransaction').addEventListener('click', () => {
+                    this.openTransactionModal();
+                });
+
+                document.getElementById('btnUndo').addEventListener('click', () => {
+                    this.undo();
+                });
+
+                document.getElementById('btnRedo').addEventListener('click', () => {
+                    this.redo();
+                });
+
+                // Modal actions
+                document.getElementById('closeModal').addEventListener('click', () => {
+                    this.closeTransactionModal();
+                });
+
+                document.getElementById('cancelModal').addEventListener('click', () => {
+                    this.closeTransactionModal();
+                });
+
+                document.getElementById('transactionForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleTransactionSubmit();
+                });
+
+                // Settings
+                document.getElementById('btnSaveSettings').addEventListener('click', () => {
+                    this.saveSettings();
+                });
+
+                document.getElementById('btnResetData').addEventListener('click', () => {
+                    this.resetAllData();
+                });
+
+                // Theme toggle
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    this.toggleTheme();
+                });
+
+                // Modal type change
+                document.getElementById('modalType').addEventListener('change', (e) => {
+                    this.updateTaxInfo(e.target.value);
+                });
+
+                // Filters
+                document.getElementById('filterType').addEventListener('change', () => {
+                    this.renderTransactions();
+                });
+
+                document.getElementById('filterMonth').addEventListener('change', () => {
+                    this.renderTransactions();
+                });
+
+                document.getElementById('filterSearch').addEventListener('input', () => {
+                    this.renderTransactions();
+                });
+            }
+
+            // Setup theme
+            setupTheme() {
+                const savedTheme = localStorage.getItem('ygp_finance_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                this.updateThemeIcon(savedTheme);
+            }
+
+            // Toggle theme
+            toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('ygp_finance_theme', newTheme);
+                this.updateThemeIcon(newTheme);
+            }
+
+            // Update theme icon
+            updateThemeIcon(theme) {
+                const icon = document.getElementById('themeIcon');
+                icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+
+            // Switch tabs
+            switchTab(tabName) {
+                // Update tab buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+                // Update tab panels
+                document.querySelectorAll('.tab-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+
+                // Load specific tab content
+                if (tabName === 'charts') {
+                    setTimeout(() => this.renderCharts(), 100);
+                }
+            }
+
+            // Show export options
+            showExportOptions() {
+                const format = confirm('Export as JSON? (Cancel for CSV)') ? 'json' : 'csv';
+                this.exportData(format);
+            }
+
+            // Open transaction modal
+            openTransactionModal(transaction = null) {
+                const modal = document.getElementById('transactionModal');
+                const title = document.getElementById('modalTitle');
+                const submitBtn = document.getElementById('submitBtnText');
+                
+                if (transaction) {
+                    title.textContent = 'Edit Transaction';
+                    submitBtn.textContent = 'Update Transaction';
+                    this.populateModal(transaction);
+                } else {
+                    title.textContent = 'Add Transaction';
+                    submitBtn.textContent = 'Add Transaction';
+                    this.clearModal();
+                }
+                
+                modal.classList.remove('hidden');
+                document.getElementById('modalDate').focus();
+            }
+
+            // Close transaction modal
+            closeTransactionModal() {
+                document.getElementById('transactionModal').classList.add('hidden');
+                this.clearModal();
+            }
+
+            // Populate modal with transaction data
+            populateModal(transaction) {
+                document.getElementById('modalDate').value = transaction.date;
+                document.getElementById('modalType').value = transaction.type;
+                document.getElementById('modalSource').value = transaction.source;
+                document.getElementById('modalAmount').value = transaction.amount;
+                this.updateTaxInfo(transaction.type);
+            }
+
+            // Clear modal form
+            clearModal() {
+                document.getElementById('transactionForm').reset();
+                document.getElementById('modalDate').value = new Date().toISOString().split('T')[0];
+                this.updateTaxInfo('Music');
+            }
+
+            // Update tax information display
+            updateTaxInfo(type) {
+                const taxInfo = document.getElementById('taxInfo');
+                if (type === 'Music') {
+                    taxInfo.style.display = 'block';
+                } else {
+                    taxInfo.style.display = 'none';
+                }
+            }
+
+            // Handle transaction form submission
+            handleTransactionSubmit() {
+                const formData = new FormData(document.getElementById('transactionForm'));
+                const transaction = {
+                    date: document.getElementById('modalDate').value,
+                    type: document.getElementById('modalType').value,
+                    source: document.getElementById('modalSource').value,
+                    amount: parseFloat(document.getElementById('modalAmount').value)
+                };
+
+                // Validate required fields
+                if (!transaction.date || !transaction.type || !transaction.source || !transaction.amount) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+
+                this.addTransaction(transaction);
+                this.closeTransactionModal();
+            }
+
+            // Save settings
+            saveSettings() {
+                this.saveToHistory();
+                
+                this.data.settings = {
+                    startingBalance: parseFloat(document.getElementById('startingBalance').value) || 0,
+                    livingCosts: parseFloat(document.getElementById('livingCosts').value) || 0,
+                    safetyThreshold: parseFloat(document.getElementById('safetyThreshold').value) || 0,
+                    musicTaxRate: parseFloat(document.getElementById('musicTaxRate').value) || 25,
+                    forecastMonths: parseInt(document.getElementById('forecastMonths').value) || 12,
+                    currency: document.getElementById('currency').value || 'GBP'
+                };
+                
+                this.saveData();
+                this.render();
+                alert('Settings saved successfully!');
+            }
+
+            // Reset all data
+            resetAllData() {
+                if (confirm('This will delete ALL data and cannot be undone. Are you sure?')) {
+                    this.data = this.getDefaultData();
+                    this.history = [];
+                    this.historyIndex = -1;
+                    this.saveData();
+                    this.render();
+                    alert('All data has been reset.');
+                }
+            }
+
+            // Main render function
+            render() {
+                this.renderDashboard();
+                this.renderTransactions();
+                this.renderForecast();
+                this.renderSettings();
+                this.updateUndoRedoButtons();
+            }
+
+            // Render dashboard overview
+            renderDashboard() {
+                const currentBalance = this.getCurrentBalance();
+                const taxPot = this.getTaxPot();
+                const safetyBuffer = currentBalance - this.data.settings.safetyThreshold;
+                
+                // Update dashboard cards
+                document.getElementById('currentBalance').textContent = 
+                    this.formatCurrency(currentBalance);
+                
+                document.getElementById('totalBalance').textContent = 
+                    this.formatCurrency(currentBalance);
+                
+                document.getElementById('taxPot').textContent = 
+                    this.formatCurrency(taxPot);
+                
+                document.getElementById('monthlyCost').textContent = 
+                    this.formatCurrency(this.data.settings.livingCosts);
+                
+                // Update safety buffer with color coding
+                const bufferElement = document.getElementById('safetyBuffer');
+                bufferElement.textContent = this.formatCurrency(safetyBuffer);
+                
+                if (safetyBuffer >= 0) {
+                    bufferElement.className = 'text-2xl font-bold text-green-600 dark:text-green-400';
+                } else {
+                    bufferElement.className = 'text-2xl font-bold text-red-600 dark:text-red-400';
+                }
+            }
+
+            // Render transactions table
+            renderTransactions() {
+                const tbody = document.getElementById('transactionsBody');
+                const filterType = document.getElementById('filterType').value;
+                const filterMonth = document.getElementById('filterMonth').value;
+                const filterSearch = document.getElementById('filterSearch').value.toLowerCase();
+                
+                // Filter transactions
+                let filteredTransactions = this.data.transactions.filter(transaction => {
+                    if (filterType && transaction.type !== filterType) return false;
+                    if (filterMonth && !transaction.date.startsWith(filterMonth)) return false;
+                    if (filterSearch && !transaction.source.toLowerCase().includes(filterSearch)) return false;
+                    return true;
+                });
+                
+                // Sort by date (newest first)
+                filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                tbody.innerHTML = '';
+                
+                filteredTransactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    row.className = 'fade-in';
+                    
+                    const isExpense = transaction.type === 'Expense';
+                    const amountClass = isExpense ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400';
+                    
+                    row.innerHTML = `
+                        <td>${new Date(transaction.date).toLocaleDateString('en-GB')}</td>
+                        <td>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${this.getTypeClass(transaction.type)}">
+                                ${this.getTypeIcon(transaction.type)} ${transaction.type}
+                            </span>
+                        </td>
+                        <td>${transaction.source}</td>
+                        <td class="${amountClass}">${isExpense ? '-' : ''}${this.formatCurrency(transaction.amount)}</td>
+                        <td>${this.formatCurrency(transaction.tax || 0)}</td>
+                        <td class="${amountClass}">${isExpense ? '-' : ''}${this.formatCurrency(transaction.net)}</td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <button onclick="app.openTransactionModal(${JSON.stringify(transaction).replace(/"/g, '&quot;')})" 
+                                        class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                                <button onclick="app.deleteTransaction('${transaction.id}')" 
+                                        class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+                
+                // Show empty state if no transactions
+                if (filteredTransactions.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                                ${this.data.transactions.length === 0 ? 'No transactions yet. Add your first transaction!' : 'No transactions match your filters.'}
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+
+            // Get CSS class for transaction type
+            getTypeClass(type) {
+                const classes = {
+                    'Music': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+                    'Salary': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                    'Other Income': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                    'Expense': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                };
+                return classes[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+            }
+
+            // Get icon for transaction type
+            getTypeIcon(type) {
+                const icons = {
+                    'Music': '🎵',
+                    'Salary': '💼',
+                    'Other Income': '💰',
+                    'Expense': '💸'
+                };
+                return icons[type] || '📄';
+            }
+
+            // Render forecast table
+            renderForecast() {
+                const tbody = document.getElementById('forecastBody');
+                const forecastData = this.getForecastData();
+                
+                tbody.innerHTML = '';
+                
+                forecastData.forEach(month => {
+                    const row = document.createElement('tr');
+                    const statusClass = month.isSafe ? 'status-safe' : 
+                                       month.closingBalance > 0 ? 'status-warning' : 'status-danger';
+                    const statusText = month.isSafe ? 'Safe' : 
+                                      month.closingBalance > 0 ? 'Low' : 'Critical';
+                    
+                    row.innerHTML = `
+                        <td class="font-medium">${month.month}</td>
+                        <td>${this.formatCurrency(month.openingBalance)}</td>
+                        <td class="text-green-600 dark:text-green-400">${this.formatCurrency(month.income)}</td>
+                        <td class="text-red-600 dark:text-red-400">${this.formatCurrency(month.expenses)}</td>
+                        <td class="${month.netChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+                            ${this.formatCurrency(month.netChange)}
+                        </td>
+                        <td class="font-semibold ${month.isSafe ? '' : 'text-red-600 dark:text-red-400'}">
+                            ${this.formatCurrency(month.closingBalance)}
+                        </td>
+                        <td>
+                            <span class="status-pill ${statusClass}">${statusText}</span>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Render settings
+            renderSettings() {
+                document.getElementById('startingBalance').value = this.data.settings.startingBalance;
+                document.getElementById('livingCosts').value = this.data.settings.livingCosts;
+                document.getElementById('safetyThreshold').value = this.data.settings.safetyThreshold;
+                document.getElementById('musicTaxRate').value = this.data.settings.musicTaxRate;
+                document.getElementById('forecastMonths').value = this.data.settings.forecastMonths;
+                document.getElementById('currency').value = this.data.settings.currency;
+            }
+
+            // Render charts
+            renderCharts() {
+                this.renderBalanceChart();
+                this.renderIncomeExpenseChart();
+                this.renderTaxChart();
+                this.renderIncomeSourceChart();
+            }
+
+            // Render balance over time chart
+            renderBalanceChart() {
+                const ctx = document.getElementById('balanceChart').getContext('2d');
+                const forecastData = this.getForecastData();
+                
+                if (this.charts.balance) {
+                    this.charts.balance.destroy();
+                }
+                
+                this.charts.balance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: forecastData.map(d => d.month),
+                        datasets: [{
+                            label: 'Balance',
+                            data: forecastData.map(d => d.closingBalance),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        }, {
+                            label: 'Safety Threshold',
+                            data: forecastData.map(() => this.data.settings.safetyThreshold),
+                            borderColor: '#ef4444',
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '£' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Render income vs expense chart
+            renderIncomeExpenseChart() {
+                const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
+                const forecastData = this.getForecastData();
+                
+                if (this.charts.incomeExpense) {
+                    this.charts.incomeExpense.destroy();
+                }
+                
+                this.charts.incomeExpense = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: forecastData.map(d => d.month),
+                        datasets: [{
+                            label: 'Income',
+                            data: forecastData.map(d => d.income),
+                            backgroundColor: '#10b981'
+                        }, {
+                            label: 'Expenses',
+                            data: forecastData.map(d => d.expenses),
+                            backgroundColor: '#ef4444'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '£' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Render tax chart
+            renderTaxChart() {
+                const ctx = document.getElementById('taxChart').getContext('2d');
+                
+                // Group tax by month
+                const taxByMonth = {};
+                this.data.transactions.forEach(t => {
+                    if (t.tax > 0) {
+                        const month = t.date.substring(0, 7);
+                        taxByMonth[month] = (taxByMonth[month] || 0) + t.tax;
+                    }
+                });
+                
+                const months = Object.keys(taxByMonth).sort();
+                const taxData = months.map(month => taxByMonth[month]);
+                
+                if (this.charts.tax) {
+                    this.charts.tax.destroy();
+                }
+                
+                this.charts.tax = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: months.map(m => new Date(m + '-01').toLocaleDateString('en-GB', { year: 'numeric', month: 'short' })),
+                        datasets: [{
+                            label: 'Tax Reserved',
+                            data: taxData,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '£' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Render income source chart
+            renderIncomeSourceChart() {
+                const ctx = document.getElementById('incomeSourceChart').getContext('2d');
+                
+                // Group income by type
+                const incomeByType = {};
+                this.data.transactions.forEach(t => {
+                    if (t.type !== 'Expense') {
+                        incomeByType[t.type] = (incomeByType[t.type] || 0) + t.net;
+                    }
+                });
+                
+                const types = Object.keys(incomeByType);
+                const amounts = types.map(type => incomeByType[type]);
+                
+                if (this.charts.incomeSource) {
+                    this.charts.incomeSource.destroy();
+                }
+                
+                this.charts.incomeSource = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: types,
+                        datasets: [{
+                            data: amounts,
+                            backgroundColor: [
+                                '#8b5cf6',
+                                '#3b82f6',
+                                '#10b981',
+                                '#f59e0b'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Format currency
+            formatCurrency(amount) {
+                const symbol = this.data.settings.currency === 'GBP' ? '£' : 
+                              this.data.settings.currency === 'USD' ? '$' : 
+                              this.data.settings.currency === 'EUR' ? '€' : '£';
+                
+                return symbol + Math.abs(amount).toLocaleString('en-GB', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+            }
+        }
+
+        // Custom styles for active states
+        const style = document.createElement('style');
+        style.textContent = `
+            .tab-btn {
+                padding: 0.75rem 1.5rem;
+                border-bottom: 3px solid transparent;
+                color: var(--text-secondary-light);
+                font-weight: 500;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                background: none;
+                border-left: none;
+                border-right: none;
+                border-top: none;
+            }
+            
+            .tab-btn:hover {
+                color: var(--text-light);
+                background: var(--bg-secondary-light);
+            }
+            
+            .tab-btn.active {
+                color: var(--accent);
+                border-bottom-color: var(--accent);
+                background: var(--bg-secondary-light);
+            }
+            
+            .tab-panel {
+                display: none;
+            }
+            
+            .tab-panel.active {
+                display: block;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize the application
+        const app = new FinanceTracker();
+
+        // Make app globally available for onclick handlers
+        window.app = app;
+    </script>
 </body>
 </html>
