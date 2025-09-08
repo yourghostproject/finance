@@ -113,6 +113,11 @@
             color: white;
         }
 
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
         .status-pill {
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
@@ -259,6 +264,15 @@
         .tab-panel.active {
             display: block;
         }
+
+        .current-month-indicator {
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -274,6 +288,10 @@
                         </h1>
                         <div class="text-sm text-gray-500 dark:text-gray-400">
                             Personal Finance • Music Career
+                        </div>
+                        <!-- Current Month Indicator -->
+                        <div id="currentMonthIndicator" class="current-month-indicator">
+                            Current: September 2025
                         </div>
                     </div>
                     
@@ -504,6 +522,36 @@
                         <h2 class="text-xl font-bold mb-6">Settings</h2>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Current Month Control -->
+                            <div class="md:col-span-2 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-3 text-blue-800 dark:text-blue-200">📅 Month Control</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Current Active Month</label>
+                                        <input type="month" id="currentMonth" class="input-field" value="2025-09">
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                            This controls which month shows as "current balance"
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <button id="btnAdvanceMonth" class="btn btn-warning w-full">
+                                            ➡️ Advance to Next Month
+                                        </button>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                            Move to the next month when ready
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <button id="btnPreviousMonth" class="btn btn-secondary w-full">
+                                            ⬅️ Go Back One Month
+                                        </button>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                            Return to previous month if needed
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-medium mb-2">Starting Balance (£)</label>
                                 <input type="number" id="startingBalance" class="input-field" value="25749">
@@ -634,10 +682,11 @@
                         safetyThreshold: 20000,
                         musicTaxRate: 25,
                         forecastMonths: 12,
-                        currency: 'GBP'
+                        currency: 'GBP',
+                        currentMonth: '2025-09' // NEW: Current active month setting
                     },
                     transactions: [],
-                    version: '1.0'
+                    version: '1.1'
                 };
             }
 
@@ -647,8 +696,9 @@
                     const saved = localStorage.getItem('ygp_finance_tracker');
                     if (saved) {
                         const data = JSON.parse(saved);
-                        // Ensure all required properties exist
-                        return { ...this.getDefaultData(), ...data };
+                        // Ensure all required properties exist, including new currentMonth setting
+                        const defaultData = this.getDefaultData();
+                        return { ...defaultData, ...data, settings: { ...defaultData.settings, ...data.settings } };
                     }
                 } catch (error) {
                     console.error('Error loading data:', error);
@@ -660,6 +710,7 @@
             saveData() {
                 try {
                     localStorage.setItem('ygp_finance_tracker', JSON.stringify(this.data));
+                    console.log('Data saved successfully');
                 } catch (error) {
                     console.error('Error saving data:', error);
                     alert('Error saving data. Your changes may not be preserved.');
@@ -668,6 +719,7 @@
 
             // Add transaction with history support
             addTransaction(transaction) {
+                console.log('Adding transaction:', transaction);
                 // Save current state to history
                 this.saveToHistory();
                 
@@ -685,6 +737,7 @@
                 }
                 
                 this.data.transactions.push(transaction);
+                console.log('Transaction added. Total transactions:', this.data.transactions.length);
                 this.saveData();
                 this.render();
             }
@@ -712,7 +765,7 @@
                 }
             }
 
-            // Delete transaction - FIXED
+            // Delete transaction
             deleteTransaction(id) {
                 console.log('Deleting transaction with ID:', id, typeof id);
                 
@@ -753,7 +806,7 @@
                 this.updateUndoRedoButtons();
             }
 
-            // Undo last action - FIXED
+            // Undo last action
             undo() {
                 if (this.historyIndex > 0) {
                     this.historyIndex--;
@@ -784,37 +837,83 @@
                 redoBtn.disabled = this.historyIndex >= this.history.length - 1;
             }
 
-            // Get forecast data - COMPLETELY FIXED
+            // NEW: Advance to next month
+            advanceToNextMonth() {
+                const currentDate = new Date(this.data.settings.currentMonth + '-01');
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                const newMonth = currentDate.toISOString().substring(0, 7);
+                
+                if (confirm(`Advance from ${this.getCurrentMonthName()} to ${this.formatMonthName(newMonth)}?\n\nThis will update your "current balance" to show the new month's closing balance.`)) {
+                    this.saveToHistory();
+                    this.data.settings.currentMonth = newMonth;
+                    this.saveData();
+                    this.render();
+                }
+            }
+
+            // NEW: Go back to previous month
+            goToPreviousMonth() {
+                const currentDate = new Date(this.data.settings.currentMonth + '-01');
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                const newMonth = currentDate.toISOString().substring(0, 7);
+                
+                if (confirm(`Go back from ${this.getCurrentMonthName()} to ${this.formatMonthName(newMonth)}?\n\nThis will update your "current balance" to show the previous month's closing balance.`)) {
+                    this.saveToHistory();
+                    this.data.settings.currentMonth = newMonth;
+                    this.saveData();
+                    this.render();
+                }
+            }
+
+            // NEW: Get current month name for display
+            getCurrentMonthName() {
+                return this.formatMonthName(this.data.settings.currentMonth);
+            }
+
+            // NEW: Format month name
+            formatMonthName(monthString) {
+                const date = new Date(monthString + '-01');
+                return date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' });
+            }
+
+            // Get forecast data - UPDATED to use settings-based current month
             getForecastData() {
+                console.log('Generating forecast data...');
                 const months = [];
-                // Start from current month (September 2025)
-                const currentMonth = new Date(2025, 8, 1); // September 2025
+                // Start from settings current month instead of hard-coded September
+                const startDate = new Date(this.data.settings.currentMonth + '-01');
                 
-                // Starting balance for September = starting balance + all past transactions
+                // Starting balance = starting balance + all past transactions (before current month)
                 let balance = this.data.settings.startingBalance;
+                console.log('Starting balance:', balance);
                 
-                // Add all transactions that happened before September 2025
+                // Add all transactions that happened before the current active month
                 this.data.transactions.forEach(transaction => {
                     const transactionDate = new Date(transaction.date);
-                    if (transactionDate < currentMonth) {
+                    if (transactionDate < startDate) {
                         if (transaction.type === 'Expense') {
                             balance -= transaction.amount;
                         } else {
                             balance += transaction.net;
                         }
+                        console.log(`Past transaction: ${transaction.date}, ${transaction.type}, Balance now: ${balance}`);
                     }
                 });
                 
-                // Generate forecast months starting from September 2025
+                // Generate forecast months starting from current active month
                 for (let i = 0; i < this.data.settings.forecastMonths; i++) {
-                    const monthDate = new Date(currentMonth);
-                    monthDate.setMonth(currentMonth.getMonth() + i);
+                    const monthDate = new Date(startDate);
+                    monthDate.setMonth(startDate.getMonth() + i);
                     const monthKey = monthDate.toISOString().substring(0, 7);
+                    
+                    console.log(`Processing month: ${monthKey}`);
                     
                     // Get transactions for this specific month
                     const monthTransactions = this.data.transactions.filter(t => 
                         t.date.startsWith(monthKey)
                     );
+                    
+                    console.log(`Found ${monthTransactions.length} transactions for ${monthKey}:`, monthTransactions);
                     
                     const income = monthTransactions
                         .filter(t => t.type !== 'Expense')
@@ -828,6 +927,8 @@
                     const netChange = income - totalExpenses;
                     const closingBalance = balance + netChange;
                     
+                    console.log(`${monthKey}: Opening=${balance}, Income=${income}, Expenses=${totalExpenses}, Closing=${closingBalance}`);
+                    
                     months.push({
                         month: monthDate.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' }),
                         monthKey: monthKey,
@@ -836,26 +937,29 @@
                         totalExpenses,
                         netChange,
                         closingBalance,
-                        isSafe: closingBalance >= this.data.settings.safetyThreshold
+                        isSafe: closingBalance >= this.data.settings.safetyThreshold,
+                        isCurrent: monthKey === this.data.settings.currentMonth // NEW: Mark current month
                     });
                     
                     // Move to next month and update balance
                     balance = closingBalance;
                 }
                 
+                console.log('Forecast generated:', months);
                 return months;
             }
 
-            // Calculate current balance - FIXED: Should match current month's closing balance
+            // Calculate current balance - UPDATED to use settings-based current month
             getCurrentBalance() {
                 const forecastData = this.getForecastData();
-                const currentMonth = '2025-09'; // September 2025
+                const currentMonth = this.data.settings.currentMonth;
                 
                 // Find current month in forecast data
                 const currentMonthForecast = forecastData.find(month => 
                     month.monthKey === currentMonth
                 );
                 
+                console.log('Current month forecast:', currentMonthForecast);
                 return currentMonthForecast ? currentMonthForecast.closingBalance : this.data.settings.startingBalance;
             }
 
@@ -1015,6 +1119,23 @@
 
                 document.getElementById('btnRedo').addEventListener('click', () => {
                     this.redo();
+                });
+
+                // NEW: Month control buttons
+                document.getElementById('btnAdvanceMonth').addEventListener('click', () => {
+                    this.advanceToNextMonth();
+                });
+
+                document.getElementById('btnPreviousMonth').addEventListener('click', () => {
+                    this.goToPreviousMonth();
+                });
+
+                // NEW: Current month input change
+                document.getElementById('currentMonth').addEventListener('change', (e) => {
+                    this.saveToHistory();
+                    this.data.settings.currentMonth = e.target.value;
+                    this.saveData();
+                    this.render();
                 });
 
                 // Modal actions
@@ -1192,7 +1313,7 @@
                 this.closeTransactionModal();
             }
 
-            // Save settings
+            // Save settings - UPDATED to include current month
             saveSettings() {
                 this.saveToHistory();
                 
@@ -1202,7 +1323,8 @@
                     safetyThreshold: parseFloat(document.getElementById('safetyThreshold').value) || 0,
                     musicTaxRate: parseFloat(document.getElementById('musicTaxRate').value) || 25,
                     forecastMonths: parseInt(document.getElementById('forecastMonths').value) || 12,
-                    currency: document.getElementById('currency').value || 'GBP'
+                    currency: document.getElementById('currency').value || 'GBP',
+                    currentMonth: document.getElementById('currentMonth').value || '2025-09' // NEW
                 };
                 
                 this.saveData();
@@ -1224,11 +1346,19 @@
 
             // Main render function
             render() {
+                console.log('Rendering application...');
                 this.renderDashboard();
                 this.renderTransactions();
                 this.renderForecast();
                 this.renderSettings();
                 this.updateUndoRedoButtons();
+                this.updateCurrentMonthIndicator(); // NEW
+            }
+
+            // NEW: Update current month indicator
+            updateCurrentMonthIndicator() {
+                const indicator = document.getElementById('currentMonthIndicator');
+                indicator.textContent = `Current: ${this.getCurrentMonthName()}`;
             }
 
             // Render dashboard overview
@@ -1236,6 +1366,8 @@
                 const currentBalance = this.getCurrentBalance();
                 const taxPot = this.getTaxPot();
                 const safetyBuffer = currentBalance - this.data.settings.safetyThreshold;
+                
+                console.log('Dashboard values:', { currentBalance, taxPot, safetyBuffer });
                 
                 // Update dashboard cards
                 document.getElementById('currentBalance').textContent = 
@@ -1268,6 +1400,8 @@
                 const filterMonth = document.getElementById('filterMonth').value;
                 const filterSearch = document.getElementById('filterSearch').value.toLowerCase();
                 
+                console.log('Rendering transactions. Total:', this.data.transactions.length);
+                
                 // Filter transactions
                 let filteredTransactions = this.data.transactions.filter(transaction => {
                     if (filterType && transaction.type !== filterType) return false;
@@ -1275,6 +1409,8 @@
                     if (filterSearch && !transaction.source.toLowerCase().includes(filterSearch)) return false;
                     return true;
                 });
+                
+                console.log('Filtered transactions:', filteredTransactions.length);
                 
                 // Sort by date (newest first)
                 filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -1354,8 +1490,9 @@
                 return icons[type] || '📄';
             }
 
-            // Render forecast table
+            // Render forecast table - UPDATED to highlight current month
             renderForecast() {
+                console.log('Rendering forecast...');
                 const tbody = document.getElementById('forecastBody');
                 const forecastData = this.getForecastData();
                 
@@ -1368,8 +1505,16 @@
                     const statusText = month.isSafe ? 'Safe' : 
                                       month.closingBalance > 0 ? 'Low' : 'Critical';
                     
+                    // NEW: Highlight current month row
+                    if (month.isCurrent) {
+                        row.classList.add('bg-blue-50', 'dark:bg-blue-900', 'border-l-4', 'border-blue-500');
+                    }
+                    
                     row.innerHTML = `
-                        <td class="font-medium">${month.month}</td>
+                        <td class="font-medium">
+                            ${month.month}
+                            ${month.isCurrent ? '<span class="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded-full">CURRENT</span>' : ''}
+                        </td>
                         <td>${this.formatCurrency(month.openingBalance)}</td>
                         <td class="text-green-600 dark:text-green-400">${this.formatCurrency(month.income)}</td>
                         <td class="text-red-600 dark:text-red-400">${this.formatCurrency(month.totalExpenses)}</td>
@@ -1388,7 +1533,7 @@
                 });
             }
 
-            // Render settings
+            // Render settings - UPDATED to include current month
             renderSettings() {
                 document.getElementById('startingBalance').value = this.data.settings.startingBalance;
                 document.getElementById('livingCosts').value = this.data.settings.livingCosts;
@@ -1396,6 +1541,7 @@
                 document.getElementById('musicTaxRate').value = this.data.settings.musicTaxRate;
                 document.getElementById('forecastMonths').value = this.data.settings.forecastMonths;
                 document.getElementById('currency').value = this.data.settings.currency;
+                document.getElementById('currentMonth').value = this.data.settings.currentMonth; // NEW
             }
 
             // Render charts
