@@ -78,12 +78,17 @@
             text-decoration: none;
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .btn-primary {
             background: var(--accent);
             color: white;
         }
         
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: #2563eb;
             transform: translateY(-1px);
         }
@@ -94,7 +99,7 @@
             border: 2px solid var(--border-light);
         }
 
-        .btn-secondary:hover {
+        .btn-secondary:hover:not(:disabled) {
             background: var(--border-light);
         }
 
@@ -220,6 +225,39 @@
         .hide-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
+        }
+
+        /* Tab styles */
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary-light);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: none;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+        }
+        
+        .tab-btn:hover {
+            color: var(--text-light);
+            background: var(--bg-secondary-light);
+        }
+        
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background: var(--bg-secondary-light);
+        }
+        
+        .tab-panel {
+            display: none;
+        }
+        
+        .tab-panel.active {
+            display: block;
         }
     </style>
 </head>
@@ -583,6 +621,7 @@
                 this.history = [];
                 this.historyIndex = -1;
                 this.charts = {};
+                this.editingTransactionId = null;
                 this.init();
             }
 
@@ -633,9 +672,8 @@
                 this.saveToHistory();
                 
                 // Add new transaction
-                transaction.id = Date.now() + Math.random();
+                transaction.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
                 transaction.timestamp = new Date().toISOString();
-                this.data.transactions.push(transaction);
                 
                 // Calculate tax for music income
                 if (transaction.type === 'Music') {
@@ -646,6 +684,7 @@
                     transaction.net = transaction.amount;
                 }
                 
+                this.data.transactions.push(transaction);
                 this.saveData();
                 this.render();
             }
@@ -673,13 +712,27 @@
                 }
             }
 
-            // Delete transaction
+            // Delete transaction - FIXED
             deleteTransaction(id) {
+                console.log('Deleting transaction with ID:', id, typeof id);
+                
                 this.saveToHistory();
                 
-                this.data.transactions = this.data.transactions.filter(t => t.id !== id);
-                this.saveData();
-                this.render();
+                const beforeLength = this.data.transactions.length;
+                this.data.transactions = this.data.transactions.filter(t => {
+                    console.log('Comparing:', t.id, 'with', id, 'Match:', t.id === id);
+                    return t.id !== id;
+                });
+                
+                console.log('Transactions before:', beforeLength, 'after:', this.data.transactions.length);
+                
+                if (this.data.transactions.length < beforeLength) {
+                    this.saveData();
+                    this.render();
+                    console.log('Transaction deleted successfully');
+                } else {
+                    console.error('Transaction not found for deletion');
+                }
             }
 
             // History management
@@ -700,7 +753,7 @@
                 this.updateUndoRedoButtons();
             }
 
-            // Undo last action
+            // Undo last action - FIXED
             undo() {
                 if (this.historyIndex > 0) {
                     this.historyIndex--;
@@ -731,14 +784,16 @@
                 redoBtn.disabled = this.historyIndex >= this.history.length - 1;
             }
 
-            // Calculate current balance
+            // Calculate current balance - FIXED: Only count transactions up to current date
             getCurrentBalance() {
+                const today = new Date().toISOString().split('T')[0];
+                
                 const totalIncome = this.data.transactions
-                    .filter(t => t.type !== 'Expense')
+                    .filter(t => t.type !== 'Expense' && t.date <= today)
                     .reduce((sum, t) => sum + t.net, 0);
                 
                 const totalExpenses = this.data.transactions
-                    .filter(t => t.type === 'Expense')
+                    .filter(t => t.type === 'Expense' && t.date <= today)
                     .reduce((sum, t) => sum + t.amount, 0);
                 
                 return this.data.settings.startingBalance + totalIncome - totalExpenses;
@@ -751,17 +806,19 @@
                     .reduce((sum, t) => sum + t.tax, 0);
             }
 
-            // Get forecast data
+            // Get forecast data - FIXED: Proper month-by-month calculation
             getForecastData() {
                 const months = [];
-                const currentDate = new Date();
+                const today = new Date();
+                let currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                
+                // Starting balance is current balance (only past transactions)
                 let balance = this.getCurrentBalance();
                 
                 for (let i = 0; i < this.data.settings.forecastMonths; i++) {
-                    const date = new Date(currentDate);
-                    date.setMonth(date.getMonth() + i);
+                    const monthKey = currentMonth.toISOString().substring(0, 7);
                     
-                    const monthKey = date.toISOString().substring(0, 7);
+                    // Get transactions for this specific month
                     const monthTransactions = this.data.transactions.filter(t => 
                         t.date.startsWith(monthKey)
                     );
@@ -770,24 +827,28 @@
                         .filter(t => t.type !== 'Expense')
                         .reduce((sum, t) => sum + t.net, 0);
                     
-                    const expenses = monthTransactions
+                    const transactionExpenses = monthTransactions
                         .filter(t => t.type === 'Expense')
-                        .reduce((sum, t) => sum + t.amount, 0) + this.data.settings.livingCosts;
+                        .reduce((sum, t) => sum + t.amount, 0);
                     
-                    const netChange = income - expenses;
+                    const totalExpenses = transactionExpenses + this.data.settings.livingCosts;
+                    const netChange = income - totalExpenses;
                     const closingBalance = balance + netChange;
                     
                     months.push({
-                        month: date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' }),
+                        month: currentMonth.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' }),
+                        monthKey: monthKey,
                         openingBalance: balance,
                         income,
-                        expenses,
+                        totalExpenses,
                         netChange,
                         closingBalance,
                         isSafe: closingBalance >= this.data.settings.safetyThreshold
                     });
                     
+                    // Move to next month and update balance
                     balance = closingBalance;
+                    currentMonth.setMonth(currentMonth.getMonth() + 1);
                 }
                 
                 return months;
@@ -876,7 +937,7 @@
                     if (lines[i].trim()) {
                         const values = lines[i].split(',').map(v => v.replace(/"/g, ''));
                         transactions.push({
-                            id: Date.now() + Math.random(),
+                            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
                             date: values[0],
                             type: values[1],
                             source: values[2],
@@ -1049,10 +1110,12 @@
                 if (transaction) {
                     title.textContent = 'Edit Transaction';
                     submitBtn.textContent = 'Update Transaction';
+                    this.editingTransactionId = transaction.id;
                     this.populateModal(transaction);
                 } else {
                     title.textContent = 'Add Transaction';
                     submitBtn.textContent = 'Add Transaction';
+                    this.editingTransactionId = null;
                     this.clearModal();
                 }
                 
@@ -1063,6 +1126,7 @@
             // Close transaction modal
             closeTransactionModal() {
                 document.getElementById('transactionModal').classList.add('hidden');
+                this.editingTransactionId = null;
                 this.clearModal();
             }
 
@@ -1094,7 +1158,6 @@
 
             // Handle transaction form submission
             handleTransactionSubmit() {
-                const formData = new FormData(document.getElementById('transactionForm'));
                 const transaction = {
                     date: document.getElementById('modalDate').value,
                     type: document.getElementById('modalType').value,
@@ -1108,7 +1171,12 @@
                     return;
                 }
 
-                this.addTransaction(transaction);
+                if (this.editingTransactionId) {
+                    this.editTransaction(this.editingTransactionId, transaction);
+                } else {
+                    this.addTransaction(transaction);
+                }
+                
                 this.closeTransactionModal();
             }
 
@@ -1221,7 +1289,7 @@
                         <td class="${amountClass}">${isExpense ? '-' : ''}${this.formatCurrency(transaction.net)}</td>
                         <td>
                             <div class="flex space-x-2">
-                                <button onclick="app.openTransactionModal(${JSON.stringify(transaction).replace(/"/g, '&quot;')})" 
+                                <button onclick="app.editTransactionById('${transaction.id}')" 
                                         class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
                                 <button onclick="app.deleteTransaction('${transaction.id}')" 
                                         class="text-red-600 hover:text-red-800 text-sm">Delete</button>
@@ -1241,6 +1309,14 @@
                             </td>
                         </tr>
                     `;
+                }
+            }
+
+            // Helper method for editing transaction by ID
+            editTransactionById(id) {
+                const transaction = this.data.transactions.find(t => t.id === id);
+                if (transaction) {
+                    this.openTransactionModal(transaction);
                 }
             }
 
@@ -1284,7 +1360,7 @@
                         <td class="font-medium">${month.month}</td>
                         <td>${this.formatCurrency(month.openingBalance)}</td>
                         <td class="text-green-600 dark:text-green-400">${this.formatCurrency(month.income)}</td>
-                        <td class="text-red-600 dark:text-red-400">${this.formatCurrency(month.expenses)}</td>
+                        <td class="text-red-600 dark:text-red-400">${this.formatCurrency(month.totalExpenses)}</td>
                         <td class="${month.netChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
                             ${this.formatCurrency(month.netChange)}
                         </td>
@@ -1387,7 +1463,7 @@
                             backgroundColor: '#10b981'
                         }, {
                             label: 'Expenses',
-                            data: forecastData.map(d => d.expenses),
+                            data: forecastData.map(d => d.totalExpenses),
                             backgroundColor: '#ef4444'
                         }]
                     },
@@ -1526,43 +1602,6 @@
                 });
             }
         }
-
-        // Custom styles for active states
-        const style = document.createElement('style');
-        style.textContent = `
-            .tab-btn {
-                padding: 0.75rem 1.5rem;
-                border-bottom: 3px solid transparent;
-                color: var(--text-secondary-light);
-                font-weight: 500;
-                transition: all 0.2s ease;
-                cursor: pointer;
-                background: none;
-                border-left: none;
-                border-right: none;
-                border-top: none;
-            }
-            
-            .tab-btn:hover {
-                color: var(--text-light);
-                background: var(--bg-secondary-light);
-            }
-            
-            .tab-btn.active {
-                color: var(--accent);
-                border-bottom-color: var(--accent);
-                background: var(--bg-secondary-light);
-            }
-            
-            .tab-panel {
-                display: none;
-            }
-            
-            .tab-panel.active {
-                display: block;
-            }
-        `;
-        document.head.appendChild(style);
 
         // Initialize the application
         const app = new FinanceTracker();
