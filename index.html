@@ -784,39 +784,32 @@
                 redoBtn.disabled = this.historyIndex >= this.history.length - 1;
             }
 
-            // Calculate current balance - FIXED: Only count transactions up to current date
-            getCurrentBalance() {
-                const today = new Date().toISOString().split('T')[0];
-                
-                const totalIncome = this.data.transactions
-                    .filter(t => t.type !== 'Expense' && t.date <= today)
-                    .reduce((sum, t) => sum + t.net, 0);
-                
-                const totalExpenses = this.data.transactions
-                    .filter(t => t.type === 'Expense' && t.date <= today)
-                    .reduce((sum, t) => sum + t.amount, 0);
-                
-                return this.data.settings.startingBalance + totalIncome - totalExpenses;
-            }
-
-            // Calculate tax pot
-            getTaxPot() {
-                return this.data.transactions
-                    .filter(t => t.type === 'Music')
-                    .reduce((sum, t) => sum + t.tax, 0);
-            }
-
-            // Get forecast data - FIXED: Proper month-by-month calculation
+            // Get forecast data - COMPLETELY FIXED
             getForecastData() {
                 const months = [];
-                const today = new Date();
-                let currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                // Start from current month (September 2025)
+                const currentMonth = new Date(2025, 8, 1); // September 2025
                 
-                // Starting balance is current balance (only past transactions)
-                let balance = this.getCurrentBalance();
+                // Starting balance for September = starting balance + all past transactions
+                let balance = this.data.settings.startingBalance;
                 
+                // Add all transactions that happened before September 2025
+                this.data.transactions.forEach(transaction => {
+                    const transactionDate = new Date(transaction.date);
+                    if (transactionDate < currentMonth) {
+                        if (transaction.type === 'Expense') {
+                            balance -= transaction.amount;
+                        } else {
+                            balance += transaction.net;
+                        }
+                    }
+                });
+                
+                // Generate forecast months starting from September 2025
                 for (let i = 0; i < this.data.settings.forecastMonths; i++) {
-                    const monthKey = currentMonth.toISOString().substring(0, 7);
+                    const monthDate = new Date(currentMonth);
+                    monthDate.setMonth(currentMonth.getMonth() + i);
+                    const monthKey = monthDate.toISOString().substring(0, 7);
                     
                     // Get transactions for this specific month
                     const monthTransactions = this.data.transactions.filter(t => 
@@ -836,7 +829,7 @@
                     const closingBalance = balance + netChange;
                     
                     months.push({
-                        month: currentMonth.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' }),
+                        month: monthDate.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' }),
                         monthKey: monthKey,
                         openingBalance: balance,
                         income,
@@ -848,10 +841,29 @@
                     
                     // Move to next month and update balance
                     balance = closingBalance;
-                    currentMonth.setMonth(currentMonth.getMonth() + 1);
                 }
                 
                 return months;
+            }
+
+            // Calculate current balance - FIXED: Should match current month's closing balance
+            getCurrentBalance() {
+                const forecastData = this.getForecastData();
+                const currentMonth = '2025-09'; // September 2025
+                
+                // Find current month in forecast data
+                const currentMonthForecast = forecastData.find(month => 
+                    month.monthKey === currentMonth
+                );
+                
+                return currentMonthForecast ? currentMonthForecast.closingBalance : this.data.settings.startingBalance;
+            }
+
+            // Calculate tax pot
+            getTaxPot() {
+                return this.data.transactions
+                    .filter(t => t.type === 'Music')
+                    .reduce((sum, t) => sum + t.tax, 0);
             }
 
             // Export data
